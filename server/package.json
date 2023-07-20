@@ -4,12 +4,22 @@
   "description": "assignment03",
   "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon --inspect app.js"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/dungtien2510"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "express-router": "^0.0.1",
+    "express-session": "^1.17.3",
+    "mongodb": "^5.7.0",
+    "mongoose": "^7.4.0",
+    "nodemon": "^3.0.1"
+  }
 }
