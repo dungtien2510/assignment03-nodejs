@@ -67,3 +67,97 @@ exports.postLogin = (req, res, next) => {
       return next(error);
     });
 };
+
+exports.postSignup = (req, res, next) => {
+  const email = req.body.email;
+  const password = req.body.password;
+  const confirmPassword = req.body.confirmPassword;
+
+  // Sử dụng express-validator để kiểm tra và xác thực dữ liệu người dùng
+  const errors = validationResult(req);
+
+  // Nếu có lỗi trong dữ liệu người dùng
+  if (!errors.isEmpty()) {
+    // In ra mảng các lỗi dưới dạng JSON trong bản ghi console của máy chủ
+    console.log(errors.array());
+
+    // Trả về một phản hồi JSON cho người dùng với mã trạng thái 422 (Unprocessable Entity) để báo lỗi
+    // Phản hồi JSON này bao gồm thông báo lỗi đầu tiên từ mảng errors, dữ liệu đã nhập (oldInput),
+    // và tất cả các lỗi trong mảng errors (validationErrors)
+    return res.status(422).json({
+      errorMessage: errors.array()[0].msg,
+      oldInput: {
+        email: email,
+        password: password,
+        confirmPassword: confirmPassword,
+      },
+      validationErrors: errors.array(),
+    });
+  }
+
+  // Kiểm tra xem mật khẩu và xác nhận mật khẩu có khớp nhau không
+  if (password !== confirmPassword) {
+    return res.status(422).json({
+      errorMessage: "Passwords do not match",
+      oldInput: {
+        email: email,
+        password: password,
+        confirmPassword: confirmPassword,
+      },
+    });
+  }
+
+  // Kiểm tra xem người dùng đã tồn tại trong cơ sở dữ liệu chưa
+  User.findOne({ email: email })
+    .then((existingUser) => {
+      if (existingUser) {
+        return res.status(422).json({
+          errorMessage: "User with this email already exists",
+          oldInput: {
+            email: email,
+            password: password,
+            confirmPassword: confirmPassword,
+          },
+        });
+      }
+
+      // Nếu người dùng không tồn tại, tiến hành mã hóa mật khẩu
+      return bcrypt
+        .hash(password, 12)
+        .then((passwordBcrypt) => {
+          const user = new User({
+            email: email,
+            password: passwordBcrypt,
+            cart: { items: [] },
+          });
+
+          // Lưu thông tin người dùng vào cơ sở dữ liệu
+          return user.save();
+        })
+        .then((result) => {
+          // Trả về một phản hồi JSON thành công nếu đăng ký thành công
+          res.status(200).json({ successMessage: "Signup success!" });
+        });
+    })
+    .catch((err) => {
+      // Nếu có lỗi trong quá trình xử lý, tạo một đối tượng Error với mã trạng thái 500 và gửi nó cho middleware next để xử lý lỗi
+      const error = new Error(err);
+      error.httpStatusCode = 500;
+      return next(error);
+    });
+};
+
+exports.postLogout = (req, res, next) => {
+  // Hủy session của người dùng
+  req.session.destroy((error) => {
+    if (error) {
+      // Nếu có lỗi trong quá trình hủy session, gửi lỗi cho middleware next để xử lý lỗi
+      const err = new Error(error);
+      err.httpStatusCode = 500;
+      return next(err);
+    }
+
+    // Nếu hủy session thành công, chuyển hướng người dùng về trang chủ
+    res.status(200).json({ message: "success" });
+  });
+};
