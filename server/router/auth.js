@@ -3,7 +3,7 @@ const express = require("express");
 const { check, body } = require("express-valiator");
 const bcrypt = require("bcryptjs");
 
-const authController = require("../controllers/auth");
+const authController = require("../controller/auth");
 const User = require("../models/user");
 
 const router = express.Router();
@@ -83,3 +83,6 @@ router.post(
   ],
   authController.postSignup
 );
+
+//router logout
+router.postLogout("/logout", authController.postLogout);
