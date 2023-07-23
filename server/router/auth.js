@@ -30,8 +30,11 @@ router.post(
       }),
 
     //body("password", "Invalid password"): Middleware này kiểm tra trường "password" trong body của yêu cầu và đảm bảo nó có ít nhất 8 ký tự và chỉ bao gồm số và chữ cái bằng phương thức isLength({ min: 8 }) và isAlphanumeric().
+    //"Invalid password": Đối số thứ hai là thông báo lỗi tùy chỉnh mà chúng ta muốn hiển thị nếu kiểm tra không thành công. Nếu trường "password" không đáp ứng yêu cầu, thông báo lỗi "Invalid password" sẽ được trả về.
     body("password", "Invalid password")
       .isLength({ min: 8 })
+
+      //.isAlphanumeric(): Phương thức này kiểm tra xem trường "password" chỉ bao gồm số và chữ cái (không bao gồm các ký tự đặc biệt) hay không.
       .isAlphanumeric()
 
       //: Middleware custom này kiểm tra mật khẩu đã nhập so với mật khẩu đã lưu trong cơ sở dữ liệu bằng cách sử dụng await bcrypt.compare() để so sánh hai mật khẩu
@@ -47,4 +50,36 @@ router.post(
       }),
   ],
   authController.postLogin
+);
+
+// router post signup
+router.post(
+  "/signup",
+  [
+    check("email")
+      .isEmail()
+      .withMessage("Please enter your email address")
+      .custom(async (value, { req }) => {
+        const userDoc = await User.findOne({ email: req.body.email });
+        if (userDoc) {
+          throw new Error("email already exists");
+        }
+      }),
+    body("password")
+      //.trim() được sử dụng để loại bỏ các khoảng trắng (space) thừa ở đầu và cuối của một chuỗi.
+      .trim()
+      .isLength({ min: 8 })
+      .withMessage("Please enter a password with at least 8 characters.")
+      .isAlphanumeric()
+      .withMessage("Please enter a password with only numbers and letters."),
+    body("confirmPassword")
+      .trim()
+      .custom((value, { req }) => {
+        if (value !== req.body.password) {
+          throw new Error("Passwords have to match");
+        }
+        return true;
+      }),
+  ],
+  authController.postSignup
 );
