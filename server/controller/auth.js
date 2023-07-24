@@ -1,6 +1,8 @@
 const User = require("../models/user");
 const bcrypt = require("bcryptjs");
 const { validationResult } = require("express-validation");
+const jwt = require("jsonwebtoken");
+const secretKey = "mysecretkey";
 
 exports.postLogin = (req, res, next) => {
   const email = req.body.email;
@@ -42,14 +44,22 @@ exports.postLogin = (req, res, next) => {
       // Nếu hai mật khẩu khớp nhau, doMatch sẽ là true, và ngược lại.
       bcrypt.compare(password, user.password).then((doMatch) => {
         if (doMatch) {
+          // jwt.sign(payload, secretOrPrivateKey, [options], callback): Đây là hàm dùng để tạo JWT. Có một số đối số cần được truyền vào:
+          //payload: Đây là đối tượng JSON chứa thông tin của người dùng (ví dụ: id, username, role, etc.) mà chúng ta muốn đính kèm vào token.
+          //secretOrPrivateKey: Đây là chuỗi bí mật (secret key) được sử dụng để mã hóa dữ liệu trong token. Để tạo token, chúng ta sử dụng secret key này. Đảm bảo giữ secret key này bí mật và không chia sẻ công khai.
+          //options: Đây là một đối tượng tùy chọn cho token. Trong ví dụ trên, chúng ta sử dụng thuộc tính expiresIn để chỉ định thời gian sống của token là 1 giờ (1h). Sau khi thời gian sống này kết thúc, token sẽ hết hiệu lực.
+          //callback(err, token): Đây là hàm callback sẽ được gọi sau khi token được tạo. Nếu có lỗi trong quá trình tạo token, biến err sẽ chứa thông tin lỗi. Nếu token được tạo thành công, biến token sẽ chứa chuỗi JWT đã tạo.
+          const token = jwt.sign({ user }, secretKey, { expiresIn: "1h" });
+
           // // Nếu mật khẩu khớp, đánh dấu người dùng đã đăng nhập và lưu thông tin người dùng vào session
           req.session.isLoggedIn = true;
           req.session.user = user;
+          req.session.token = token;
           return req.session.save((err) => {
             console.log(err);
 
-            // // Lưu session và trả về một phản hồi JSON thành công với mã trạng thái 401
-            res.status(401).json({ successMessage: "success" });
+            //Lưu session và trả về một phản hồi JSON thành công với mã trạng thái 401
+            res.status(200).json({ successMessage: "success", token: token });
           });
         }
 
