@@ -1,6 +1,6 @@
 const User = require("../models/user");
 const bcrypt = require("bcryptjs");
-const { validationResult } = require("express-validation");
+const { validationResult } = require("express-validator");
 const jwt = require("jsonwebtoken");
 const secretKey = "mysecretkey";
 
@@ -168,6 +168,6 @@ exports.postLogout = (req, res, next) => {
     }
 
     // Nếu hủy session thành công, chuyển hướng người dùng về trang chủ
-    res.status(200).json({ message: "success" });
+    res.status(200).json({ message: "Logout success" });
   });
 };

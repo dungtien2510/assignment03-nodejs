@@ -21,10 +21,10 @@ const flash = require("connect-flash");
 const authRouter = require("./router/auth");
 
 //router shop
-const shopRouter = require("./router/shop");
+// const shopRouter = require("./router/shop");
 
 const MONGODB_URI =
-  "mongodb+srv://dungtien2510:Dung2501997@cluster0.jyqoacf.mongodb.net/shop";
+  "mongodb+srv://dungtien2510:Dung25101997@cluster0.jyqoacf.mongodb.net/shop";
 
 //chúng ta tạo một đối tượng mới của MongoDBStore bằng từ khóa new
 //và truyền một đối tượng cấu hình cho nó.
@@ -51,25 +51,25 @@ app.use(
     store: store,
 
     // thời gian cookie bị xóa
-    cookie: { maxAge: 60000 * 60, expires },
+    cookie: { maxAge: 60000 * 60 },
   })
 );
 
 //app.use(csrf()): Dòng này khai báo việc sử dụng middleware csurf trong ứng dụng Express. Middleware csurf sẽ xử lý việc tạo và kiểm tra mã CSRF (CSRF token) cho các yêu cầu POST, PUT và DELETE.
-app.use(csrf());
+// app.use(csrf());
 
 // Sử dụng connect-flash middleware
 app.use(flash());
 
-app.use((req, res, next) => {
-  //res.locals là một đối tượng trong Express.js dùng để lưu trữ các biến cục bộ (local variables) trong quá trình xử lý yêu cầu và trả về đến các view template. Biến cục bộ là các biến chỉ tồn tại trong phạm vi của một yêu cầu cụ thể và chỉ có thể truy cập từ trong route hoặc từ view template được render cho yêu cầu đó.
-  res.locals.isAuthenticated = req.session.isLoggedIn;
+// app.use((req, res, next) => {
+//   //res.locals là một đối tượng trong Express.js dùng để lưu trữ các biến cục bộ (local variables) trong quá trình xử lý yêu cầu và trả về đến các view template. Biến cục bộ là các biến chỉ tồn tại trong phạm vi của một yêu cầu cụ thể và chỉ có thể truy cập từ trong route hoặc từ view template được render cho yêu cầu đó.
+//   res.locals.isAuthenticated = req.session.isLoggedIn;
 
-  //res.locals.csrfToken = req.csrfToken(): Dòng này thêm một biến csrfToken vào đối tượng res.locals, đảm bảo mã CSRF sẽ được truyền vào view template và có thể được sử dụng trong các yêu cầu POST, PUT và DELETE.
-  //req.csrfToken(): Đây là một phương thức của middleware csurf để tạo mã CSRF (CSRF token) cho yêu cầu hiện tại. Mã CSRF này sẽ được sử dụng để xác thực các yêu cầu POST, PUT và DELETE và ngăn chặn tấn công CSRF.
-  res.locals.csrfToken = req.csrfToken();
-  next();
-});
+//   //res.locals.csrfToken = req.csrfToken(): Dòng này thêm một biến csrfToken vào đối tượng res.locals, đảm bảo mã CSRF sẽ được truyền vào view template và có thể được sử dụng trong các yêu cầu POST, PUT và DELETE.
+//   //req.csrfToken(): Đây là một phương thức của middleware csurf để tạo mã CSRF (CSRF token) cho yêu cầu hiện tại. Mã CSRF này sẽ được sử dụng để xác thực các yêu cầu POST, PUT và DELETE và ngăn chặn tấn công CSRF.
+//   res.locals.csrfToken = req.csrfToken();
+//   next();
+// });
 
 app.use(cors());
 
@@ -78,7 +78,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 //router shopRouter
-app.use(shopRouter);
+// app.use(shopRouter);
 
 //router auth
 app.use("/auth", authRouter);

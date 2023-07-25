@@ -1,6 +1,6 @@
 const express = require("express");
 
-const { check, body } = require("express-valiator");
+const { check, body } = require("express-validator");
 const bcrypt = require("bcryptjs");
 
 const authController = require("../controller/auth");
@@ -85,4 +85,10 @@ router.post(
 );
 
 //router logout
-router.postLogout("/logout", authController.postLogout);
+router.post("/logout", authController.postLogout);
+
+router.get("/test", (req, res) => {
+  res.json({ message: "Test csurf" });
+});
+
+module.exports = router;
