@@ -80,6 +80,19 @@ router.post(
         }
         return true;
       }),
+    body("fullName")
+      // ^: Đây là anchor, kiểm tra xem chuỗi phải bắt đầu từ đầu.
+      //[A-Z]: Kiểm tra ký tự đầu tiên phải là chữ cái in hoa (uppercase).
+      //[a-z]*: Kiểm tra phần còn lại của tên có thể có một hoặc nhiều chữ cái thường (lowercase).
+      //(?:\s[A-Z][a-z]*)+: Đây là một nhóm non-capturing, kiểm tra chuỗi có thể có một hoặc nhiều từ (được phân tách bởi khoảng trắng), trong đó từ đầu tiên viết hoa và các từ sau đó viết thường.
+      //$: Đây là anchor, kiểm tra xem chuỗi phải kết thúc ở đây.
+      .matches(/^[A-Z][a-z]*(?:\s[A-Z][a-z]*)+$/g)
+      .withMessage(
+        "Please Enter your full name, the first letter must be capitalized"
+      ),
+    body("phone")
+      .matches(/^0\d+$/g)
+      .withMessage("Phone number dose not match format"),
   ],
   authController.postSignup
 );

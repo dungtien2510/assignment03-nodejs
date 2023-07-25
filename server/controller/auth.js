@@ -82,6 +82,8 @@ exports.postSignup = (req, res, next) => {
   const email = req.body.email;
   const password = req.body.password;
   const confirmPassword = req.body.confirmPassword;
+  const fullName = req.body.fullName;
+  const phone = req.body.phone;
 
   // Sử dụng express-validator để kiểm tra và xác thực dữ liệu người dùng
   const errors = validationResult(req);
@@ -113,6 +115,8 @@ exports.postSignup = (req, res, next) => {
         email: email,
         password: password,
         confirmPassword: confirmPassword,
+        phone: phone,
+        fullName: fullName,
       },
     });
   }
@@ -138,6 +142,8 @@ exports.postSignup = (req, res, next) => {
           const user = new User({
             email: email,
             password: passwordBcrypt,
+            fullName: fullName,
+            phone: phone,
             cart: { items: [] },
           });
 

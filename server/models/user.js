@@ -11,6 +11,18 @@ const userSchema = new Schema({
     type: String,
     required: true,
   },
+  phone:{
+    type: String,
+    required: true,
+  },
+  address:{
+    type: String,
+
+  },
+  fullName:{
+    type: String,
+    required: true
+  },
   cart: {
     items: [
       {
