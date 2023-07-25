@@ -21,7 +21,7 @@ const flash = require("connect-flash");
 const authRouter = require("./router/auth");
 
 //router shop
-// const shopRouter = require("./router/shop");
+const shopRouter = require("./router/shop");
 
 const MONGODB_URI =
   "mongodb+srv://dungtien2510:Dung25101997@cluster0.jyqoacf.mongodb.net/shop";
@@ -78,7 +78,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 //router shopRouter
-// app.use(shopRouter);
+app.use("/shop", shopRouter);
 
 //router auth
 app.use("/auth", authRouter);
