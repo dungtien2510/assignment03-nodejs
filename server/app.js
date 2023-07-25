@@ -4,6 +4,11 @@ const cors = require("cors");
 //moongoose
 const mongoose = require("mongoose");
 
+//jsonwebToken
+const jwt = require("jsonwebtoken");
+//secret jwt
+const secretJWT = "mysecretkey";
+
 // express-session: Đây là mô-đun chịu trách nhiệm quản lý session trong ứng dụng Express.
 // Nó cung cấp middleware để tạo và quản lý dữ liệu session.
 const session = require("express-session");
@@ -22,6 +27,9 @@ const authRouter = require("./router/auth");
 
 //router shop
 const shopRouter = require("./router/shop");
+
+//router client
+const clientRouter = require("./router/client");
 
 const MONGODB_URI =
   "mongodb+srv://dungtien2510:Dung25101997@cluster0.jyqoacf.mongodb.net/shop";
@@ -82,6 +90,38 @@ app.use("/shop", shopRouter);
 
 //router auth
 app.use("/auth", authRouter);
+
+// function protection: tạo hàm bảo vệ các router khi đăng nhập mới sử dụng được
+const protection = (req, res, next) => {
+  //Đầu tiên, middleware kiểm tra xem header "Authorization" có tồn tại hay không.
+  const token = req.headers.authorization
+    ? req.headers.authorization.split(" ")[1]
+    : undefined;
+  //Sau đó, middleware kiểm tra xem biến token hoặc biến req.session.isLoggedIn và token trong session có tồn tại hay không.
+  if (!token || !(req.session.isLoggedIn && req.session.token)) {
+    //Nếu không tìm thấy token hoặc req.session.isLoggedIn là false (người dùng chưa đăng nhập), nó sẽ trả về mã trạng thái 401 và thông báo rằng người dùng phải đăng nhập để truy cập tài nguyên bảo vệ.
+    return res.status(401).json({ message: "You must be logged in" });
+  }
+
+  //Tiếp theo, middleware kiểm tra xem token trong header "Authorization" có khớp với token trong session (req.session.token) hay không.
+  if (token !== req.session.token) {
+    //Nếu token không khớp (trường hợp người dùng gửi một token không hợp lệ), middleware sẽ trả về mã trạng thái 403 và thông báo rằng token không hợp lệ.
+    return res.status(403).json({ message: "Token is invalid 103" });
+  }
+
+  //Cuối cùng, middleware sử dụng thư viện JWT để giải mã mã thông báo JWT (token) bằng cách sử dụng khóa bí mật (secretJWT).
+  //Nếu mã thông báo JWT hợp lệ, nó sẽ được giải mã thành một JavaScript object (decodeToken), chứa các thông tin mà bạn đã định nghĩa trong mã thông báo.
+  //Nếu mã thông báo không hợp lệ, middleware sẽ trả về mã trạng thái 401 và thông báo rằng token không hợp lệ.
+  jwt.verify(token, secretJWT, (err, decodeToken) => {
+    if (err) {
+      return res.status(401).json({ message: "Token is invalid 107" });
+    }
+    return next();
+  });
+};
+
+//router client
+app.use("/client", protection, clientRouter);
 
 mongoose
   .connect(MONGODB_URI)
