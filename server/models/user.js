@@ -75,7 +75,7 @@ userSchema.methods.addToCart = function (product, quantityProduct) {
 };
 
 //remove cart
-userSchema.methods.removeFromCart = function (productId, quantityRemove) {
+userSchema.methods.removeFromCart = function (productId) {
   //Phương thức này sử dụng filter để tạo danh sách mới updatedCartItems, bỏ qua sản phẩm có productId trùng với productId được cung cấp (để loại bỏ sản phẩm này khỏi giỏ hàng).
   const updatedCartItems = this.cart.items.filter((item) => {
     return item.productId.toString() !== productId.toString();

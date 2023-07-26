@@ -70,9 +70,23 @@ exports.postAddProducts = async (req, res, next) => {
 exports.postRemoveProduct = async (req, res, next) => {
   try {
     const prodId = req.body.productId;
+
+    const result = await req.user.removeFromCart(prodId);
+
+    return res.json({ message: "removed product successfully" });
   } catch {
     (err) => {
       console.log(err);
     };
+  }
+};
+
+//clear cart
+exports.postClearCart = async (req, res, next) => {
+  try {
+    const result = await req.user.clearCart();
+    return res.json({ message: "cleared cart successfully" });
+  } catch {
+    (err) => console.log(err);
   }
 };

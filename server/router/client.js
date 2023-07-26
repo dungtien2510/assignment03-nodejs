@@ -8,4 +8,9 @@ router.get("/cart", shopController.getCart);
 //router post add products card
 router.post("/addProduct", shopController.postAddProducts);
 
+router.post("/removeProduct", shopController.postRemoveProduct);
+
+// router post clear cart
+router.post("/clearCart", shopController.postClearCart);
+
 module.exports = router;
