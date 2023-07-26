@@ -65,19 +65,14 @@ exports.postAddProducts = async (req, res, next) => {
     };
   }
 };
-// exports.postAddProducts = (req, res, next) => {
-//   const prodId = req.body.productId;
-//   Product.findById(prodId)
-//     .then((product) => {
-//       return req.user.addToCart(product);
-//     })
-//     .then((result) => {
-//       console.log(result);
-//       res.redirect("/cart");
-//     })
-//     .catch((err) => {
-//       const error = new Error(err);
-//       error.httpStatusCode = 500;
-//       return next(error);
-//     });
-// };
+
+//remove Product
+exports.postRemoveProduct = async (req, res, next) => {
+  try {
+    const prodId = req.body.productId;
+  } catch {
+    (err) => {
+      console.log(err);
+    };
+  }
+};

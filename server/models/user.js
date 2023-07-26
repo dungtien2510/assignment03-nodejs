@@ -46,13 +46,19 @@ userSchema.methods.addToCart = function (product, quantityProduct) {
   const cartProductIndex = this.cart.items.findIndex((cp) => {
     return cp.productId.toString() === product._id.toString();
   });
-  let newQuantity = quantityProduct;
+  let newQuantity = Number(quantityProduct);
   const updatedCartItems = [...this.cart.items];
-  console.log("cartProductInde", cartProductIndex);
+
   //Nếu sản phẩm đã tồn tại (cartProductIndex >= 0), phương thức sẽ tăng số lượng của sản phẩm lên 1.
   if (cartProductIndex >= 0) {
-    newQuantity += this.cart.items[cartProductIndex].quantity;
-    updatedCartItems[cartProductIndex].quantity = newQuantity;
+    newQuantity = this.cart.items[cartProductIndex].quantity + newQuantity;
+
+    //nếu quantityProduct được gửi đến là 1 số âm (trừ đi số lượng products đã đặt) và newQuantity =0 thì sẽ xóa luôn sản phầm đó trong giỏ hàng
+    if (!newQuantity) {
+      updatedCartItems.splice(cartProductIndex, 1);
+    } else {
+      updatedCartItems[cartProductIndex].quantity = newQuantity;
+    }
   } else {
     //Nếu sản phẩm chưa có trong giỏ hàng, nó sẽ được thêm vào danh sách updatedCartItems với số lượng là 1.
     updatedCartItems.push({
@@ -69,7 +75,7 @@ userSchema.methods.addToCart = function (product, quantityProduct) {
 };
 
 //remove cart
-userSchema.methods.removeFromCart = function (productId) {
+userSchema.methods.removeFromCart = function (productId, quantityRemove) {
   //Phương thức này sử dụng filter để tạo danh sách mới updatedCartItems, bỏ qua sản phẩm có productId trùng với productId được cung cấp (để loại bỏ sản phẩm này khỏi giỏ hàng).
   const updatedCartItems = this.cart.items.filter((item) => {
     return item.productId.toString() !== productId.toString();
