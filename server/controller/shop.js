@@ -8,8 +8,8 @@ exports.getProducts = async (req, res, next) => {
     const totalProducts = await Product.countDocuments();
     const products = await Product.find({}).skip(skip).limit(limit).exec();
     res.status(200).json({ products: products, totalProducts: totalProducts });
-  } catch {
-    (error) => console.log(error);
+  } catch (error) {
+    console.log(error);
   }
 };
 
@@ -18,8 +18,8 @@ exports.getIdProduct = async (req, res, next) => {
     const idProduct = req.params.idProduct;
     const product = await Product.findById(idProduct);
     res.status(200).json(product);
-  } catch {
-    (error) => console.log(error);
+  } catch (error) {
+    console.log(error);
   }
 };
 
@@ -34,8 +34,8 @@ exports.getCategory = async (req, res, next) => {
       .skip(skip)
       .limit(limit);
     res.status(200).json({ products: products, totalProducts: totalProducts });
-  } catch {
-    (error) => console.log(error);
+  } catch (error) {
+    console.log(error);
   }
 };
 
@@ -55,14 +55,12 @@ exports.postAddProducts = async (req, res, next) => {
     const prodId = req.body.productId;
     const quantityProduct = req.body.quantityProduct;
     const product = await Product.findById(prodId);
-    console.log("product", product);
+
     const result = await req.user.addToCart(product, quantityProduct);
 
     return res.json({ message: "success", result: result });
-  } catch {
-    (err) => {
-      console.log(err);
-    };
+  } catch (err) {
+    console.log(err);
   }
 };
 
@@ -74,10 +72,8 @@ exports.postRemoveProduct = async (req, res, next) => {
     const result = await req.user.removeFromCart(prodId);
 
     return res.json({ message: "removed product successfully" });
-  } catch {
-    (err) => {
-      console.log(err);
-    };
+  } catch (err) {
+    console.log(err);
   }
 };
 
@@ -86,7 +82,7 @@ exports.postClearCart = async (req, res, next) => {
   try {
     const result = await req.user.clearCart();
     return res.json({ message: "cleared cart successfully" });
-  } catch {
-    (err) => console.log(err);
+  } catch (err) {
+    console.log(err);
   }
 };
