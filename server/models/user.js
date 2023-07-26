@@ -40,18 +40,18 @@ const userSchema = new Schema({
 });
 
 //addToCart
-userSchema.methods.addToCart = function (product) {
+userSchema.methods.addToCart = function (product, quantityProduct) {
   console.log(this.cart);
   // Đầu tiên, phương thức này tìm kiếm sản phẩm có cùng productId với sản phẩm được cung cấp trong giỏ hàng hiện tại (this.cart.items) bằng cách sử dụng findIndex.
   const cartProductIndex = this.cart.items.findIndex((cp) => {
     return cp.productId.toString() === product._id.toString();
   });
-  let newQuantity = 1;
+  let newQuantity = quantityProduct;
   const updatedCartItems = [...this.cart.items];
   console.log("cartProductInde", cartProductIndex);
   //Nếu sản phẩm đã tồn tại (cartProductIndex >= 0), phương thức sẽ tăng số lượng của sản phẩm lên 1.
   if (cartProductIndex >= 0) {
-    newQuantity = this.cart.items[cartProductIndex].quantity + 1;
+    newQuantity += this.cart.items[cartProductIndex].quantity;
     updatedCartItems[cartProductIndex].quantity = newQuantity;
   } else {
     //Nếu sản phẩm chưa có trong giỏ hàng, nó sẽ được thêm vào danh sách updatedCartItems với số lượng là 1.

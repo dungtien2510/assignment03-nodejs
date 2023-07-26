@@ -42,7 +42,7 @@ exports.getCategory = async (req, res, next) => {
 //get Cart
 exports.getCart = async (req, res, next) => {
   try {
-    const cart = req.session.user.cart;
+    const cart = req.user.cart;
     return res.status(200).json(cart);
   } catch {
     (err) => console.log(err);
@@ -53,10 +53,10 @@ exports.getCart = async (req, res, next) => {
 exports.postAddProducts = async (req, res, next) => {
   try {
     const prodId = req.body.productId;
-    // const quantityProduct = req.body.productId;
+    const quantityProduct = req.body.quantityProduct;
     const product = await Product.findById(prodId);
     console.log("product", product);
-    const result = await req.user.addToCart(product);
+    const result = await req.user.addToCart(product, quantityProduct);
 
     return res.json({ message: "success", result: result });
   } catch {
