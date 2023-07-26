@@ -40,14 +40,15 @@ const userSchema = new Schema({
 });
 
 //addToCart
-userSchema.methods.addToCart = (product) => {
+userSchema.methods.addToCart = function (product) {
+  console.log(this.cart);
   // Đầu tiên, phương thức này tìm kiếm sản phẩm có cùng productId với sản phẩm được cung cấp trong giỏ hàng hiện tại (this.cart.items) bằng cách sử dụng findIndex.
   const cartProductIndex = this.cart.items.findIndex((cp) => {
     return cp.productId.toString() === product._id.toString();
   });
   let newQuantity = 1;
-  const updatedQuatityItems = [...this.cart.items];
-
+  const updatedCartItems = [...this.cart.items];
+  console.log("cartProductInde", cartProductIndex);
   //Nếu sản phẩm đã tồn tại (cartProductIndex >= 0), phương thức sẽ tăng số lượng của sản phẩm lên 1.
   if (cartProductIndex >= 0) {
     newQuantity = this.cart.items[cartProductIndex].quantity + 1;
@@ -62,7 +63,7 @@ userSchema.methods.addToCart = (product) => {
 
   //Cuối cùng, danh sách giỏ hàng (this.cart) sẽ được cập nhật với updatedCartItems và mô hình người dùng sẽ được lưu lại vào cơ sở dữ liệu thông qua this.save().
   this.cart = {
-    item: updatedCartItems,
+    items: updatedCartItems,
   };
   return this.save();
 };

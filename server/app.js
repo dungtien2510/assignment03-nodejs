@@ -63,6 +63,33 @@ app.use(
   })
 );
 
+//tạo 1 middleware lưu user vào request
+//. Sau đó, req.user có thể được sử dụng trong các middleware và xử lý yêu cầu tiếp theo, và bạn có thể sử dụng methods của user từ req.user.
+const User = require("./models/user");
+app.use((req, res, next) => {
+  if (!req.session.user) {
+    return next();
+  }
+  User.findById(req.session.user._id)
+    .then((user) => {
+      if (!user) {
+        return next();
+      }
+
+      //Dòng req.user = user; không tạo instance mới của lớp User.
+      // Thay vào đó, nó chỉ đơn giản là gán đối tượng user (đã lấy từ cơ sở dữ liệu) vào thuộc tính req.user.
+      // Điều này cho phép bạn truy cập thông tin của người dùng từ req.user trong các route và middleware tiếp theo mà không cần phải lấy lại từ cơ sở dữ liệu.
+      //Khi bạn lưu thông tin người dùng vào req.user, nó chỉ đơn giản là việc lưu một tham chiếu đến đối tượng user đã tìm thấy từ cơ sở dữ liệu,
+      // và không phải là việc tạo một instance mới của lớp User.
+      // Các methods của user được định nghĩa trong model userSchema vẫn sẽ được sử dụng thông qua đối tượng này, bởi vì nó vẫn là một instance của model User, dù được tạo mới hoặc lấy từ cơ sở dữ liệu.
+      req.user = user;
+      next();
+    })
+    .catch((error) => {
+      next(new Error(error));
+    });
+});
+
 //app.use(csrf()): Dòng này khai báo việc sử dụng middleware csurf trong ứng dụng Express. Middleware csurf sẽ xử lý việc tạo và kiểm tra mã CSRF (CSRF token) cho các yêu cầu POST, PUT và DELETE.
 // app.use(csrf());
 

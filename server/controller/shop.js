@@ -48,3 +48,36 @@ exports.getCart = async (req, res, next) => {
     (err) => console.log(err);
   }
 };
+
+//add products to cart
+exports.postAddProducts = async (req, res, next) => {
+  try {
+    const prodId = req.body.productId;
+    // const quantityProduct = req.body.productId;
+    const product = await Product.findById(prodId);
+    console.log("product", product);
+    const result = await req.user.addToCart(product);
+
+    return res.json({ message: "success", result: result });
+  } catch {
+    (err) => {
+      console.log(err);
+    };
+  }
+};
+// exports.postAddProducts = (req, res, next) => {
+//   const prodId = req.body.productId;
+//   Product.findById(prodId)
+//     .then((product) => {
+//       return req.user.addToCart(product);
+//     })
+//     .then((result) => {
+//       console.log(result);
+//       res.redirect("/cart");
+//     })
+//     .catch((err) => {
+//       const error = new Error(err);
+//       error.httpStatusCode = 500;
+//       return next(error);
+//     });
+// };
