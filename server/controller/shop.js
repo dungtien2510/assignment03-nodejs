@@ -110,9 +110,7 @@ exports.orderValid = [
     .withMessage("Phone number dose not match format"),
 
   //kiêm tra address có nhập đúng định dạng ít nhất 2 từ không
-  body("address")
-    .matches(/^[a-z]*(?:\s[a-z]*)+$/g)
-    .withMessage("Please Enter your address"),
+  body("address").notEmpty().withMessage("Please Enter your address"),
 ];
 
 // middleware post order
@@ -165,6 +163,19 @@ exports.getOrdered = async function (req, res, next) {
     return res
       .status(200)
       .json({ message: "get orders successfully", result: orders });
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+// get order id
+exports.getOrderedId = async (req, res, next) => {
+  try {
+    const orderId = req.params.orderId;
+    const result = await Order.findById(orderId);
+    return res
+      .status(200)
+      .json({ message: "get order id successfully", result: result });
   } catch (err) {
     console.log(err);
   }

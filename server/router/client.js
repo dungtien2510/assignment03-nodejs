@@ -19,4 +19,7 @@ router.post("/order", shopController.orderValid, shopController.postOrder);
 //router get orders
 router.get("/orders", shopController.getOrdered);
 
+//router get order id
+router.get("/detail/:orderId", shopController.getOrderedId);
+
 module.exports = router;
