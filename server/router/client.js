@@ -16,4 +16,7 @@ router.post("/clearCart", shopController.postClearCart);
 //router post order
 router.post("/order", shopController.orderValid, shopController.postOrder);
 
+//router get orders
+router.get("/orders", shopController.getOrdered);
+
 module.exports = router;

@@ -154,5 +154,18 @@ exports.postOrder = async (req, res, next) => {
   }
 };
 
-// // order
-// module.exports = { orderValid, postOrder };
+exports.getOrdered = async function (req, res, next) {
+  try {
+    const userId = req.user._id;
+    const orders = await Order.find({
+      "user.userId": userId.toString(),
+    })
+      .select("-products -dateBook")
+      .exec();
+    return res
+      .status(200)
+      .json({ message: "get orders successfully", result: orders });
+  } catch (err) {
+    console.log(err);
+  }
+};
