@@ -13,4 +13,7 @@ router.post("/removeProduct", shopController.postRemoveProduct);
 // router post clear cart
 router.post("/clearCart", shopController.postClearCart);
 
+//router post order
+router.post("/order", shopController.orderValid, shopController.postOrder);
+
 module.exports = router;
