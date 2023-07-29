@@ -4,6 +4,24 @@ const { validationResult } = require("express-validator");
 const jwt = require("jsonwebtoken");
 const secretKey = "mysecretkey";
 
+//nodemailer là một thư viện Node.js cho phép gửi email thông qua các giao thức  hay thậm chí là các dịch vụ email của bên thứ ba
+const nodemailer = require("nodemailer");
+const sendgridTransport = require("nodemailer-sendgrid-transport");
+
+const transporter = nodemailer.createTransport(
+  //sendgridTransport: Đây là một plugin được sử dụng với nodemailer để tạo ra transporter cho dịch vụ SendGrid. Nó giúp chúng ta gửi email qua SendGrid API bằng cách cung cấp khóa API của SendGrid.
+  sendgridTransport({
+    //auth: Đây là phần cấu hình cho việc xác thực với dịch vụ SendGrid. Trong trường hợp này, chúng ta sử dụng API key để xác thực.
+    auth: {
+      //"SG.u7": Đây là API key của bạn. Trong đoạn mã mẫu này, API key được truyền vào trực tiếp trong mã,
+      // nhưng thường nên lưu trữ nó trong biến môi trường (environment variable) để bảo mật hơn.
+      // API key này sẽ được cung cấp bởi SendGrid khi bạn đăng ký và sử dụng dịch vụ của họ.
+      api_key:
+        "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",
+    },
+  })
+);
+
 exports.postLogin = (req, res, next) => {
   const email = req.body.email;
   const password = req.body.password;
@@ -150,8 +168,15 @@ exports.postSignup = (req, res, next) => {
           // Lưu thông tin người dùng vào cơ sở dữ liệu
           return user.save();
         })
+
         .then((result) => {
           // Trả về một phản hồi JSON thành công nếu đăng ký thành công
+          transporter.sendMail({
+            from: "dungptfx19575@funix.edu.vn",
+            to: email,
+            subject: "Signup successded!",
+            html: "<h1>Signup success</h1>",
+          });
           res.status(200).json({ successMessage: "Signup success!" });
         });
     })

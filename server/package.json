@@ -26,8 +26,12 @@
     "express-validator": "^7.0.1",
     "flash": "^1.1.0",
     "jsonwebtoken": "^9.0.1",
+    "lodash": "^4.17.21",
+    "minimist": "^1.2.8",
     "mongodb": "^5.7.0",
     "mongoose": "^7.4.0",
+    "nodemailer": "^6.9.4",
+    "nodemailer-sendgrid-transport": "^0.2.0",
     "nodemon": "^3.0.1"
   }
 }
