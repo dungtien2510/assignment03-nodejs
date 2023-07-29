@@ -179,5 +179,4 @@ mongoose
   //đặt tạo text index ở tệp chạy ứng dụng là vì nó là một nhiệm vụ cấu hình cơ sở dữ liệu và chỉ cần thực hiện một lần khi ứng dụng bắt đầu chạy.
   .then(() => createTextIndex())
   .then((result) => app.listen(5000))
-
   .catch((error) => console.log(error));

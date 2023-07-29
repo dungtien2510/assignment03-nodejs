@@ -185,8 +185,12 @@ exports.getOrderedId = async (req, res, next) => {
 exports.getSearchProd = async (req, res, next) => {
   try {
     const name = req.query.name;
-    // await Product.createIndex({ name: "text" });
-    const result = await Product.find({ $text: { $search: name } });
+    const skip = req.query.skip;
+    const limit = req.query.limit;
+    const result = await Product.find({ $text: { $search: name } })
+      .skip(skip)
+      .limit(limit)
+      .exec();
     return res
       .status(200)
       .json({ message: "search successfully", result: result });
