@@ -118,6 +118,8 @@ app.use("/shop", shopRouter);
 //router auth
 app.use("/auth", authRouter);
 
+//router admin
+
 // function protection: tạo hàm bảo vệ các router khi đăng nhập mới sử dụng được
 const protection = (req, res, next) => {
   //Đầu tiên, middleware kiểm tra xem header "Authorization" có tồn tại hay không.
@@ -150,7 +152,32 @@ const protection = (req, res, next) => {
 //router client
 app.use("/client", protection, clientRouter);
 
+// router admin
+// app.use("/admin", protection, adminRouter);
+
+////Tạo text index cho trường cần tìm kiếm (text index) là một cơ chế cải thiện hiệu suất cho việc tìm kiếm văn bản trong cơ sở dữ liệu.
+// Khi bạn thực hiện tìm kiếm văn bản trong một trường mà không có text index, MongoDB sẽ phải quét toàn bộ dữ liệu trong trường đó để tìm các giá trị khớp với từ khoá tìm kiếm.
+const createTextIndex = async () => {
+  try {
+    //Kết nối tới cơ sở dữ liệu MongoDB và lưu trữ kết nối trong biến client. Hàm mongoose.connect trả về một kết nối MongoDB.
+    const client = await mongoose.connect(MONGODB_URI);
+
+    //const db = client.connection.db;: Lấy cơ sở dữ liệu từ kết nối MongoDB đã tạo.
+    const db = client.connection.db;
+
+    // Sử dụng phương thức createIndex để tạo text index cho trường "name" trong bộ sưu tập "products" trong cơ sở dữ liệu.
+    await db.collection("products").createIndex({ name: "text" });
+    console.log('Text index for "name" field created successfully.');
+  } catch (error) {
+    console.error("Error creating text index:", error);
+  }
+};
+
+//
 mongoose
   .connect(MONGODB_URI)
+  //đặt tạo text index ở tệp chạy ứng dụng là vì nó là một nhiệm vụ cấu hình cơ sở dữ liệu và chỉ cần thực hiện một lần khi ứng dụng bắt đầu chạy.
+  .then(() => createTextIndex())
   .then((result) => app.listen(5000))
+
   .catch((error) => console.log(error));

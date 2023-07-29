@@ -180,3 +180,17 @@ exports.getOrderedId = async (req, res, next) => {
     console.log(err);
   }
 };
+
+//search products from name
+exports.getSearchProd = async (req, res, next) => {
+  try {
+    const name = req.query.name;
+    // await Product.createIndex({ name: "text" });
+    const result = await Product.find({ $text: { $search: name } });
+    return res
+      .status(200)
+      .json({ message: "search successfully", result: result });
+  } catch (err) {
+    console.log(err);
+  }
+};

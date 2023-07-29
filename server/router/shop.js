@@ -10,4 +10,7 @@ router.get("/detail/:idProduct", shopController.getIdProduct);
 //router get product category
 router.get("/category/:category", shopController.getCategory);
 
+//router get search
+router.get("/search", shopController.getSearchProd);
+
 module.exports = router;
