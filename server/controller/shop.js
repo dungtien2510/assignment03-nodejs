@@ -173,13 +173,11 @@ exports.postOrder = async (req, res, next) => {
       },
     });
     const result = await order.save();
+
+    //gửi một email xác nhận đơn hàng bằng hàm sendOrderConfirmationEmail
     await sendOrderConfirmationEmail(email, fullName, address, products);
-    // const pdfOrder = "pdfOrder-" + order._id + ".pdf";
-    // const pdfOrderPath = path.join("data", order, pdfOrder);
 
-    // const pdfDoc = new PDFDocument();
-
-    // function
+    // hàm bất đồng bộ được sử dụng để gửi email xác nhận đơn hàng.
     async function sendOrderConfirmationEmail(
       email,
       fullName,
@@ -187,6 +185,7 @@ exports.postOrder = async (req, res, next) => {
       products
     ) {
       try {
+        //tạo nội dung email dựa trên thông tin đơn hàng
         const htmlContent = await generateOrderEmailContent(
           fullName,
           address,
@@ -210,11 +209,19 @@ exports.postOrder = async (req, res, next) => {
         const productDetailsAndTotal = await fetchProductDetails(products);
         const { prodHtml: productDetails, totalPrice } = productDetailsAndTotal;
         console.log("productDetails", productDetails);
+
+        //__dirname là một biến toàn cục (global variable) trong Node.js, chứa đường dẫn thư mục chứa tệp JavaScript đang được thực thi.
         const htmlfilePath = path.join(__dirname, "../unit", "template.html");
+
+        //fs.promises.readFile là một phương thức của Node.js dùng để đọc nội dung của một tệp.
+        //Tham số thứ hai của fs.promises.readFile là "utf8", đây chỉ định mã hóa sử dụng khi đọc tệp. "utf8" là mã hóa cho văn bản.
         const htmlContentBuffer = await fs.promises.readFile(
           htmlfilePath,
           "utf8"
         );
+
+        //Sau khi đọc nội dung tệp HTML bằng fs.promises.readFile, nội dung được lưu trong biến htmlContentBuffer là dạng buffer (bộ đệm).
+        //Để sử dụng nội dung này, chúng ta cần chuyển nó thành chuỗi (string). Đoạn mã htmlContentBuffer.toString("utf8") thực hiện việc này bằng cách chuyển đổi buffer thành chuỗi sử dụng mã hóa "utf8" (cùng mã hóa như lúc đọc tệp).
         const htmlContent = htmlContentBuffer.toString("utf8");
 
         const orderData = {
@@ -233,6 +240,7 @@ exports.postOrder = async (req, res, next) => {
       }
     }
 
+    //hàm bất đồng bộ để lấy chi tiết các sản phẩm trong đơn hàng.
     async function fetchProductDetails(products) {
       try {
         const productIds = products.map((product) => product.productId);
@@ -259,63 +267,6 @@ exports.postOrder = async (req, res, next) => {
         throw error;
       }
     }
-
-    // //__dirname là một biến toàn cục (global variable) trong Node.js, chứa đường dẫn thư mục chứa tệp JavaScript đang được thực thi.
-    // const htmlfilePath = path.join(__dirname, "../unit", "template.html");
-
-    // //function chỉnh sửa lại phần table
-    // const tableHtml = async (products) => {
-    //   try {
-    //     const productsId = products.map((pro) => pro.productId);
-    //     const productsOrder = await Product.find({ _id: productsId });
-    //     console.log("prodOrder", productsOrder);
-    //     const productsHtml = productsOrder.map((pro) => {
-    //       const product = products.find(
-    //         (p) => p.productId.toString() === pro._id.toString()
-    //       );
-    //       console.log("product", product);
-    //       return {
-    //         name: pro.name,
-    //         photos: pro.photos,
-    //         price: pro.price,
-    //         quantity: product.quantity,
-    //         total: pro.price * product.quantity,
-    //       };
-    //     });
-    //     console.log("productsHtml", productsHtml);
-    //     const result = productsHtml.reduce((acc, pro) => {
-    //       return `${acc}<tr><td>${pro.name}</td>
-    //       <td><img src="${pro.photos[0]}" alt="product" /></td>
-    //       <td>${pro.price}</td>
-    //       <td>${pro.quantity}</td>
-    //       <td>${pro.total}</td></tr>`;
-    //     }, "");
-    //     console.log("table", result);
-    //     return result;
-    //   } catch (err) {
-    //     console.log(err);
-    //   }
-    // };
-    // console.log();
-    // fs.readFile(htmlfilePath, "utf8", function (err, htmlContent) {
-    //   if (err) throw err;
-
-    //   const orderData = {
-    //     fullName: fullName,
-    //     phoneNumber: phoneNumber,
-    //     address: address,
-    //     products: tableHtml(products),
-    //   };
-
-    //   const modifiedHtmlContent = mustache.render(htmlContent, orderData);
-
-    //   transporter.sendMail({
-    //     from: "dungptfx19575@funix.edu.vn",
-    //     to: email,
-    //     subject: "Order successfully created",
-    //     html: modifiedHtmlContent,
-    //   });
-    // });
 
     await req.user.clearCart();
     return res
