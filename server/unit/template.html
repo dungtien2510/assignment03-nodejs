@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Your Order</title>
+    <style>
+      body {
+        background-color: #212529;
+        color: white;
+        margin: auto;
+        width: 1270px;
+      }
+      .infor {
+        margin: 30px 20px;
+        font-size: 20px;
+      }
+      table th td {
+        border: 1px solid rgba(8, 8, 8, 0.848);
+        font-size: 20px;
+      }
+      .total {
+        margin-top: 40px;
+      }
+      img {
+        width: 30px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <h1>Xin Chào {{fullName}}</h1>
+    <div class="infor">
+      <p>Phone: {{phoneNumber}}</p>
+      <p>Address: {{address}}</p>
+    </div>
+    <table>
+      <thead>
+        <th>Tên sản Phẩm</th>
+        <th>Hình ảnh</th>
+        <th>Giá</th>
+        <th>Số Lượng</th>
+        <th>Thành tiền</th>
+      </thead>
+      <tbody>
+        {{#table}}
+        <tr>
+          <td>{{name}}</td>
+          <td>
+            <img src="{{photo}}" alt="product" />
+          </td>
+          <td>{{price}}</td>
+          <td>{{quantity}}</td>
+          <td>{{total}}</td>
+        </tr>
+        {{/table}}
+      </tbody>
+    </table>
+    <div class="total">
+      <h1>Tổng thanh toán:</h1>
+      <h1>{{totalPrice}}</h1>
+    </div>
+    <h1>Cám ơn bạn!</h1>
+  </body>
+</html>

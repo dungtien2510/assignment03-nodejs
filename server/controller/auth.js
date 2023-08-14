@@ -1,8 +1,15 @@
 const User = require("../models/user");
 const bcrypt = require("bcryptjs");
+
 const { validationResult } = require("express-validator");
 const jwt = require("jsonwebtoken");
 const secretKey = "mysecretkey";
+
+//Module path cung cấp các phương thức hữu ích để làm việc với các đường dẫn tệp tin và thư mục trong ứng dụng Node.js.
+const path = require("path");
+
+//pdfkit là một gói thư viện của Node.js được sử dụng để tạo và tùy chỉnh tập tin PDF
+const pdfDocument = require("pdfkit");
 
 //nodemailer là một thư viện Node.js cho phép gửi email thông qua các giao thức  hay thậm chí là các dịch vụ email của bên thứ ba
 const nodemailer = require("nodemailer");
@@ -17,7 +24,7 @@ const transporter = nodemailer.createTransport(
       // nhưng thường nên lưu trữ nó trong biến môi trường (environment variable) để bảo mật hơn.
       // API key này sẽ được cung cấp bởi SendGrid khi bạn đăng ký và sử dụng dịch vụ của họ.
       api_key:
-        "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",
+        "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",
     },
   })
 );
