@@ -24,7 +24,7 @@ const transporter = nodemailer.createTransport(
       // nhưng thường nên lưu trữ nó trong biến môi trường (environment variable) để bảo mật hơn.
       // API key này sẽ được cung cấp bởi SendGrid khi bạn đăng ký và sử dụng dịch vụ của họ.
       api_key:
-        "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",
+        "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",
     },
   })
 );
@@ -53,7 +53,7 @@ exports.postLogin = (req, res, next) => {
     // Phản hồi JSON này bao gồm thông báo lỗi đầu tiên từ mảng errors, dữ liệu đã nhập (oldInput),
     // và tất cả các lỗi trong mảng errors (validationErrors).
     return res.status(422).json({
-      errorMessage: errors.array()[0].msg,
+      message: errors.array()[0].msg,
       oldInput: {
         email: email,
         password: password,
@@ -77,20 +77,26 @@ exports.postLogin = (req, res, next) => {
           const token = jwt.sign({ user }, secretKey, { expiresIn: "1h" });
 
           // // Nếu mật khẩu khớp, đánh dấu người dùng đã đăng nhập và lưu thông tin người dùng vào session
-          req.session.isLoggedIn = true;
-          req.session.user = user;
-          req.session.token = token;
-          return req.session.save((err) => {
-            console.log(err);
+          // req.session.isLoggedIn = true;
+          // req.session.user = user;
+          // req.session.token = token;
+          // return req.session.save((err) => {
+          //   console.log(err);
 
-            //Lưu session và trả về một phản hồi JSON thành công với mã trạng thái 401
-            res.status(200).json({ successMessage: "success", token: token });
+          //Lưu session và trả về một phản hồi JSON thành công với mã trạng thái 401
+          return res.status(200).json({
+            successMessage: "success",
+            token: token,
+            fullName: user.fullName,
+            phone: user.phone,
+            email: user.email,
           });
+          // });
         }
 
         //req.flash("error", "Invalid email or password") được sử dụng để đặt thông báo lỗi (error message) vào flash session trong ứng dụng sử dụng framework Express. Flash session là một dạng session đặc biệt trong Express, cho phép lưu trữ dữ liệu tạm thời để hiển thị cho người dùng trong một yêu cầu HTTP duy nhất, thường được sử dụng để hiển thị thông báo sau khi xảy ra một hành động nhất định (ví dụ: đăng nhập thất bại).
         //Khi bạn gọi req.flash("error", "Invalid email or password"), bạn đang đặt thông báo lỗi vào flash session với khóa là "error" và giá trị là "Invalid email or password". Sau đó, thông báo lỗi này sẽ tồn tại trong flash session và sẽ được sử dụng để hiển thị cho người dùng sau khi trình duyệt chuyển đổi sang trang khác (thông thường là sau khi gửi một yêu cầu và nhận được phản hồi).
-        req.flash("error", "Invalid email or password");
+        // req.flash("error", "Invalid email or password");
         res.status(403).json({ successMessage: "Invalid password" });
       });
     })
@@ -122,7 +128,7 @@ exports.postSignup = (req, res, next) => {
     // Phản hồi JSON này bao gồm thông báo lỗi đầu tiên từ mảng errors, dữ liệu đã nhập (oldInput),
     // và tất cả các lỗi trong mảng errors (validationErrors)
     return res.status(422).json({
-      errorMessage: errors.array()[0].msg,
+      message: errors.array()[0].msg,
       oldInput: {
         email: email,
         password: password,
@@ -134,8 +140,9 @@ exports.postSignup = (req, res, next) => {
 
   // Kiểm tra xem mật khẩu và xác nhận mật khẩu có khớp nhau không
   if (password !== confirmPassword) {
+    console.log("passwords do not match");
     return res.status(422).json({
-      errorMessage: "Passwords do not match",
+      message: "Passwords do not match",
       oldInput: {
         email: email,
         password: password,
@@ -150,8 +157,9 @@ exports.postSignup = (req, res, next) => {
   User.findOne({ email: email })
     .then((existingUser) => {
       if (existingUser) {
+        console.log("existing user");
         return res.status(422).json({
-          errorMessage: "User with this email already exists",
+          message: "User with this email already exists",
           oldInput: {
             email: email,
             password: password,
@@ -184,7 +192,7 @@ exports.postSignup = (req, res, next) => {
             subject: "Signup successded!",
             html: "<h1>Signup success</h1>",
           });
-          res.status(200).json({ successMessage: "Signup success!" });
+          res.status(200).json({ message: "Signup success!" });
         });
     })
     .catch((err) => {
@@ -193,19 +201,4 @@ exports.postSignup = (req, res, next) => {
       error.httpStatusCode = 500;
       return next(error);
     });
-};
-
-exports.postLogout = (req, res, next) => {
-  // Hủy session của người dùng
-  req.session.destroy((error) => {
-    if (error) {
-      // Nếu có lỗi trong quá trình hủy session, gửi lỗi cho middleware next để xử lý lỗi
-      const err = new Error(error);
-      err.httpStatusCode = 500;
-      return next(err);
-    }
-
-    // Nếu hủy session thành công, chuyển hướng người dùng về trang chủ
-    res.status(200).json({ message: "Logout success" });
-  });
 };

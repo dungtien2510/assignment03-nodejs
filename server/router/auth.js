@@ -98,10 +98,6 @@ router.post(
 );
 
 //router logout
-router.post("/logout", authController.postLogout);
-
-router.get("/test", (req, res) => {
-  res.json({ message: "Test csurf" });
-});
+// router.post("/logout", authController.postLogout);
 
 module.exports = router;

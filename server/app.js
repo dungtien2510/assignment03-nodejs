@@ -20,7 +20,7 @@ const MongoDBStore = require("connect-mongodb-session")(session);
 const csrf = require("csurf");
 
 //Thư viện connect-flash được sử dụng trong các ứng dụng web Node.js để hiển thị thông báo tạm thời (flash messages) cho người dùng
-const flash = require("connect-flash");
+// const flash = require("connect-flash");
 
 //router auth
 const authRouter = require("./router/auth");
@@ -37,64 +37,82 @@ const MONGODB_URI =
 //chúng ta tạo một đối tượng mới của MongoDBStore bằng từ khóa new
 //và truyền một đối tượng cấu hình cho nó.
 // MongoDBStore là một cơ chế lưu trữ session sử dụng MongoDB.
-const store = new MongoDBStore({
-  //uri: Thuộc tính này được đặt là MONGODB_URI,
-  // mô tả chuỗi kết nối đến cơ sở dữ liệu MongoDB mà dữ liệu session sẽ được lưu trữ.
-  uri: MONGODB_URI,
-  //collection: Thuộc tính này xác định tên bảng (collection) trong cơ sở dữ liệu MongoDB mà dữ liệu session sẽ được lưu trữ.
-  //Trong trường hợp này, nó được đặt là "sessions".
-  collection: "sessions",
-});
+// const store = new MongoDBStore({
+//   //uri: Thuộc tính này được đặt là MONGODB_URI,
+//   // mô tả chuỗi kết nối đến cơ sở dữ liệu MongoDB mà dữ liệu session sẽ được lưu trữ.
+//   uri: MONGODB_URI,
+//   //collection: Thuộc tính này xác định tên bảng (collection) trong cơ sở dữ liệu MongoDB mà dữ liệu session sẽ được lưu trữ.
+//   //Trong trường hợp này, nó được đặt là "sessions".
+//   collection: "sessions",
+// });
 
-app.use(
-  session({
-    //Đây là chuỗi bí mật (secret) được sử dụng để mã hóa dữ liệu session trước khi lưu trữ nó vào cookie.
-    secret: "my secret",
+// app.use(
+//   session({
+//     //Đây là chuỗi bí mật (secret) được sử dụng để mã hóa dữ liệu session trước khi lưu trữ nó vào cookie.
+//     secret: "my secret",
 
-    //resave: Thuộc tính này quy định liệu session có được lưu lại vào cơ sở dữ liệu sau mỗi lần yêu cầu hay không.
-    resave: false,
+//     //resave: Thuộc tính này quy định liệu session có được lưu lại vào cơ sở dữ liệu sau mỗi lần yêu cầu hay không.
+//     resave: false,
 
-    //saveUninitialized: Thuộc tính này xác định liệu session sẽ được lưu lại vào cơ sở dữ liệu ngay cả khi nó chưa được sử dụng hay không.
-    saveUninitialized: false,
-    store: store,
+//     //saveUninitialized: Thuộc tính này xác định liệu session sẽ được lưu lại vào cơ sở dữ liệu ngay cả khi nó chưa được sử dụng hay không.
+//     saveUninitialized: false,
+//     store: store,
 
-    // thời gian cookie bị xóa
-    cookie: { maxAge: 60000 * 60 },
-  })
-);
+//     // thời gian cookie bị xóa
+//     cookie: { maxAge: 60000 * 60 },
+//   })
+// );
 
 //tạo 1 middleware lưu user vào request
 //. Sau đó, req.user có thể được sử dụng trong các middleware và xử lý yêu cầu tiếp theo, và bạn có thể sử dụng methods của user từ req.user.
-const User = require("./models/user");
-app.use((req, res, next) => {
-  if (!req.session.user) {
-    return next();
-  }
-  User.findById(req.session.user._id)
-    .then((user) => {
-      if (!user) {
-        return next();
-      }
 
-      //Dòng req.user = user; không tạo instance mới của lớp User.
-      // Thay vào đó, nó chỉ đơn giản là gán đối tượng user (đã lấy từ cơ sở dữ liệu) vào thuộc tính req.user.
-      // Điều này cho phép bạn truy cập thông tin của người dùng từ req.user trong các route và middleware tiếp theo mà không cần phải lấy lại từ cơ sở dữ liệu.
-      //Khi bạn lưu thông tin người dùng vào req.user, nó chỉ đơn giản là việc lưu một tham chiếu đến đối tượng user đã tìm thấy từ cơ sở dữ liệu,
-      // và không phải là việc tạo một instance mới của lớp User.
-      // Các methods của user được định nghĩa trong model userSchema vẫn sẽ được sử dụng thông qua đối tượng này, bởi vì nó vẫn là một instance của model User, dù được tạo mới hoặc lấy từ cơ sở dữ liệu.
-      req.user = user;
-      next();
-    })
-    .catch((error) => {
-      next(new Error(error));
-    });
-});
+// app.use((req, res, next) => {
+//   const token = req.headers.authorization
+//     ? req.headers.authorization.split(" ")[1]
+//     : undefined;
+//   //Sau đó, middleware kiểm tra xem biến token hoặc biến req.session.isLoggedIn và token trong session có tồn tại hay không.
+//   if (!token) {
+//     //Nếu không tìm thấy token hoặc req.session.isLoggedIn là false (người dùng chưa đăng nhập), nó sẽ trả về mã trạng thái 401 và thông báo rằng người dùng phải đăng nhập để truy cập tài nguyên bảo vệ.
+//     return next();
+//   }
+
+//   //Cuối cùng, middleware sử dụng thư viện JWT để giải mã mã thông báo JWT (token) bằng cách sử dụng khóa bí mật (secretJWT).
+//   //Nếu mã thông báo JWT hợp lệ, nó sẽ được giải mã thành một JavaScript object (decodeToken), chứa các thông tin mà bạn đã định nghĩa trong mã thông báo.
+//   //Nếu mã thông báo không hợp lệ, middleware sẽ trả về mã trạng thái 401 và thông báo rằng token không hợp lệ.
+//   jwt.verify(token, secretJWT, (err, decodeToken) => {
+//     req.user = decodeToken.user;
+//     return next();
+//   });
+// });
+// app.use((req, res, next) => {
+//   if (!req.session.user) {
+//     return next();
+//   }
+//   User.findById(req.session.user._id)
+//     .then((user) => {
+//       if (!user) {
+//         return next();
+//       }
+
+//       //Dòng req.user = user; không tạo instance mới của lớp User.
+//       // Thay vào đó, nó chỉ đơn giản là gán đối tượng user (đã lấy từ cơ sở dữ liệu) vào thuộc tính req.user.
+//       // Điều này cho phép bạn truy cập thông tin của người dùng từ req.user trong các route và middleware tiếp theo mà không cần phải lấy lại từ cơ sở dữ liệu.
+//       //Khi bạn lưu thông tin người dùng vào req.user, nó chỉ đơn giản là việc lưu một tham chiếu đến đối tượng user đã tìm thấy từ cơ sở dữ liệu,
+//       // và không phải là việc tạo một instance mới của lớp User.
+//       // Các methods của user được định nghĩa trong model userSchema vẫn sẽ được sử dụng thông qua đối tượng này, bởi vì nó vẫn là một instance của model User, dù được tạo mới hoặc lấy từ cơ sở dữ liệu.
+//       req.user = user;
+//       next();
+//     })
+//     .catch((error) => {
+//       next(new Error(error));
+//     });
+// });
 
 //app.use(csrf()): Dòng này khai báo việc sử dụng middleware csurf trong ứng dụng Express. Middleware csurf sẽ xử lý việc tạo và kiểm tra mã CSRF (CSRF token) cho các yêu cầu POST, PUT và DELETE.
 // app.use(csrf());
 
 // Sử dụng connect-flash middleware
-app.use(flash());
+// app.use(flash());
 
 // app.use((req, res, next) => {
 //   //res.locals là một đối tượng trong Express.js dùng để lưu trữ các biến cục bộ (local variables) trong quá trình xử lý yêu cầu và trả về đến các view template. Biến cục bộ là các biến chỉ tồn tại trong phạm vi của một yêu cầu cụ thể và chỉ có thể truy cập từ trong route hoặc từ view template được render cho yêu cầu đó.
@@ -120,6 +138,7 @@ app.use("/auth", authRouter);
 
 //router admin
 
+const User = require("./models/user");
 // function protection: tạo hàm bảo vệ các router khi đăng nhập mới sử dụng được
 const protection = (req, res, next) => {
   //Đầu tiên, middleware kiểm tra xem header "Authorization" có tồn tại hay không.
@@ -127,15 +146,11 @@ const protection = (req, res, next) => {
     ? req.headers.authorization.split(" ")[1]
     : undefined;
   //Sau đó, middleware kiểm tra xem biến token hoặc biến req.session.isLoggedIn và token trong session có tồn tại hay không.
-  if (!token || !(req.session.isLoggedIn && req.session.token)) {
+  if (!token) {
     //Nếu không tìm thấy token hoặc req.session.isLoggedIn là false (người dùng chưa đăng nhập), nó sẽ trả về mã trạng thái 401 và thông báo rằng người dùng phải đăng nhập để truy cập tài nguyên bảo vệ.
-    return res.status(401).json({ message: "You must be logged in" });
-  }
-
-  //Tiếp theo, middleware kiểm tra xem token trong header "Authorization" có khớp với token trong session (req.session.token) hay không.
-  if (token !== req.session.token) {
-    //Nếu token không khớp (trường hợp người dùng gửi một token không hợp lệ), middleware sẽ trả về mã trạng thái 403 và thông báo rằng token không hợp lệ.
-    return res.status(403).json({ message: "Token is invalid 103" });
+    return res
+      .status(401)
+      .json({ message: "You must be logged in", status: 401 });
   }
 
   //Cuối cùng, middleware sử dụng thư viện JWT để giải mã mã thông báo JWT (token) bằng cách sử dụng khóa bí mật (secretJWT).
@@ -143,9 +158,28 @@ const protection = (req, res, next) => {
   //Nếu mã thông báo không hợp lệ, middleware sẽ trả về mã trạng thái 401 và thông báo rằng token không hợp lệ.
   jwt.verify(token, secretJWT, (err, decodeToken) => {
     if (err) {
-      return res.status(401).json({ message: "Token is invalid 107" });
+      return res.status(401).json({ message: "Token is invalid", status: 401 });
     }
-    return next();
+
+    if (!decodeToken.user || !decodeToken.user._id) {
+      return res
+        .status(401)
+        .json({ message: "Invalid user data in token", status: 401 });
+    }
+
+    const userId = decodeToken.user._id.toString();
+
+    User.findById(userId)
+      .then((user) => {
+        if (!user) {
+          return res.status(404).json({ message: "User not found" });
+        }
+
+        req.user = user;
+
+        next();
+      })
+      .catch((err) => next(err));
   });
 };
 

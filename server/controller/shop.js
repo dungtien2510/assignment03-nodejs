@@ -26,7 +26,7 @@ const transporter = nodemailer.createTransport(
       // nhưng thường nên lưu trữ nó trong biến môi trường (environment variable) để bảo mật hơn.
       // API key này sẽ được cung cấp bởi SendGrid khi bạn đăng ký và sử dụng dịch vụ của họ.
       api_key:
-        "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",
+        "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",
     },
   })
 );
@@ -74,7 +74,16 @@ exports.getCategory = async (req, res, next) => {
 exports.getCart = async (req, res, next) => {
   try {
     const cart = req.user.cart;
-    return res.status(200).json(cart);
+    const prodId = cart.items.map((prod) => prod.productId.toString());
+    const prodCart = await Product.find({ _id: { $in: prodId } }).exec();
+
+    const result = prodCart.map((prod) => {
+      const quantity = cart.items.find(
+        (id) => id.productId.toString() === prod._id.toString()
+      ).quantity;
+      return { ...prod.toObject(), quantity: quantity };
+    });
+    return res.status(200).json(result);
   } catch {
     (err) => console.log(err);
   }
@@ -83,12 +92,13 @@ exports.getCart = async (req, res, next) => {
 //add products to cart
 exports.postAddProducts = async (req, res, next) => {
   try {
-    const prodId = req.body.productId;
+    const prodId = req.body.id;
+
     const quantityProduct = req.body.quantityProduct;
     const product = await Product.findById(prodId);
 
     const result = await req.user.addToCart(product, quantityProduct);
-
+    const dataResult = result;
     return res.json({ message: "success", result: result });
   } catch (err) {
     console.log(err);
@@ -98,11 +108,14 @@ exports.postAddProducts = async (req, res, next) => {
 //remove Product
 exports.postRemoveProduct = async (req, res, next) => {
   try {
-    const prodId = req.body.productId;
+    const prodId = req.body.id;
 
     const result = await req.user.removeFromCart(prodId);
-
-    return res.json({ message: "removed product successfully" });
+    const dataResult = result.cart.items;
+    return res.json({
+      message: "removed product successfully",
+      dataResult: dataResult,
+    });
   } catch (err) {
     console.log(err);
   }
@@ -176,7 +189,7 @@ exports.postOrder = async (req, res, next) => {
 
     //gửi một email xác nhận đơn hàng bằng hàm sendOrderConfirmationEmail
     await sendOrderConfirmationEmail(email, fullName, address, products);
-
+    res.status(200).json({ message: "Order success" });
     // hàm bất đồng bộ được sử dụng để gửi email xác nhận đơn hàng.
     async function sendOrderConfirmationEmail(
       email,
@@ -208,7 +221,6 @@ exports.postOrder = async (req, res, next) => {
       try {
         const productDetailsAndTotal = await fetchProductDetails(products);
         const { prodHtml: productDetails, totalPrice } = productDetailsAndTotal;
-        console.log("productDetails", productDetails);
 
         //__dirname là một biến toàn cục (global variable) trong Node.js, chứa đường dẫn thư mục chứa tệp JavaScript đang được thực thi.
         const htmlfilePath = path.join(__dirname, "../unit", "template.html");
@@ -232,7 +244,6 @@ exports.postOrder = async (req, res, next) => {
           totalPrice:
             totalPrice.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") + "VNĐ",
         };
-        console.log("orderData", orderData);
         return mustache.render(htmlContent, orderData);
       } catch (error) {
         console.error("Error generating order email content:", error);
