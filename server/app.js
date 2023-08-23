@@ -189,6 +189,16 @@ app.use("/client", protection, clientRouter);
 // router admin
 // app.use("/admin", protection, adminRouter);
 
+// middleware xữ lý lỗi
+app.use((req, res, next) => {
+  res.status(404).json({ message: "API Not Found" });
+});
+
+//middleware xữ lý lỗi 500
+app.use((err, req, res, next) => {
+  console.log(err);
+  res.status(500).json({ message: "sever error" });
+});
 ////Tạo text index cho trường cần tìm kiếm (text index) là một cơ chế cải thiện hiệu suất cho việc tìm kiếm văn bản trong cơ sở dữ liệu.
 // Khi bạn thực hiện tìm kiếm văn bản trong một trường mà không có text index, MongoDB sẽ phải quét toàn bộ dữ liệu trong trường đó để tìm các giá trị khớp với từ khoá tìm kiếm.
 const createTextIndex = async () => {

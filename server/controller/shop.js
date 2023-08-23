@@ -39,8 +39,10 @@ exports.getProducts = async (req, res, next) => {
     const totalProducts = await Product.countDocuments();
     const products = await Product.find({}).skip(skip).limit(limit).exec();
     res.status(200).json({ products: products, totalProducts: totalProducts });
-  } catch (error) {
-    console.log(error);
+  } catch (err) {
+    const error = new Error(err);
+    error.httpStatusCode = 500;
+    return next(error);
   }
 };
 
@@ -49,8 +51,10 @@ exports.getIdProduct = async (req, res, next) => {
     const idProduct = req.params.idProduct;
     const product = await Product.findById(idProduct);
     res.status(200).json(product);
-  } catch (error) {
-    console.log(error);
+  } catch (err) {
+    const error = new Error(err);
+    error.httpStatusCode = 500;
+    return next(error);
   }
 };
 
@@ -65,8 +69,10 @@ exports.getCategory = async (req, res, next) => {
       .skip(skip)
       .limit(limit);
     res.status(200).json({ products: products, totalProducts: totalProducts });
-  } catch (error) {
-    console.log(error);
+  } catch (err) {
+    const error = new Error(err);
+    error.httpStatusCode = 500;
+    return next(error);
   }
 };
 
@@ -85,7 +91,11 @@ exports.getCart = async (req, res, next) => {
     });
     return res.status(200).json(result);
   } catch {
-    (err) => console.log(err);
+    (err) => {
+      const error = new Error(err);
+      error.httpStatusCode = 500;
+      return next(error);
+    };
   }
 };
 
@@ -101,7 +111,9 @@ exports.postAddProducts = async (req, res, next) => {
     const dataResult = result;
     return res.json({ message: "success", result: result });
   } catch (err) {
-    console.log(err);
+    const error = new Error(err);
+    error.httpStatusCode = 500;
+    return next(error);
   }
 };
 
@@ -117,7 +129,9 @@ exports.postRemoveProduct = async (req, res, next) => {
       dataResult: dataResult,
     });
   } catch (err) {
-    console.log(err);
+    const error = new Error(err);
+    error.httpStatusCode = 500;
+    return next(error);
   }
 };
 
@@ -127,7 +141,9 @@ exports.postClearCart = async (req, res, next) => {
     const result = await req.user.clearCart();
     return res.json({ message: "cleared cart successfully" });
   } catch (err) {
-    console.log(err);
+    const error = new Error(err);
+    error.httpStatusCode = 500;
+    return next(error);
   }
 };
 
@@ -284,7 +300,9 @@ exports.postOrder = async (req, res, next) => {
       .status(200)
       .json({ message: "order saved successfully", result: result });
   } catch (err) {
-    console.log(err);
+    const error = new Error(err);
+    error.httpStatusCode = 500;
+    return next(error);
   }
 };
 
@@ -300,7 +318,9 @@ exports.getOrdered = async function (req, res, next) {
       .status(200)
       .json({ message: "get orders successfully", result: orders });
   } catch (err) {
-    console.log(err);
+    const error = new Error(err);
+    error.httpStatusCode = 500;
+    return next(error);
   }
 };
 
@@ -313,7 +333,9 @@ exports.getOrderedId = async (req, res, next) => {
       .status(200)
       .json({ message: "get order id successfully", result: result });
   } catch (err) {
-    console.log(err);
+    const error = new Error(err);
+    error.httpStatusCode = 500;
+    return next(error);
   }
 };
 
@@ -331,6 +353,8 @@ exports.getSearchProd = async (req, res, next) => {
       .status(200)
       .json({ message: "search successfully", result: result });
   } catch (err) {
-    console.log(err);
+    const error = new Error(err);
+    error.httpStatusCode = 500;
+    return next(error);
   }
 };
