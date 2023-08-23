@@ -345,13 +345,20 @@ exports.getSearchProd = async (req, res, next) => {
     const name = req.query.name;
     const skip = req.query.skip;
     const limit = req.query.limit;
+
+    const totalProducts = await Product.countDocuments({
+      $text: { $search: name },
+    });
+
     const result = await Product.find({ $text: { $search: name } })
       .skip(skip)
       .limit(limit)
       .exec();
-    return res
-      .status(200)
-      .json({ message: "search successfully", result: result });
+    return res.status(200).json({
+      message: "search successfully",
+      result: result,
+      totalProducts: totalProducts,
+    });
   } catch (err) {
     const error = new Error(err);
     error.httpStatusCode = 500;
