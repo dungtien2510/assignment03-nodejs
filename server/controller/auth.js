@@ -24,7 +24,7 @@ const transporter = nodemailer.createTransport(
       // nhưng thường nên lưu trữ nó trong biến môi trường (environment variable) để bảo mật hơn.
       // API key này sẽ được cung cấp bởi SendGrid khi bạn đăng ký và sử dụng dịch vụ của họ.
       api_key:
-        "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",
+        "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",
     },
   })
 );
@@ -177,6 +177,7 @@ exports.postSignup = (req, res, next) => {
             password: passwordBcrypt,
             fullName: fullName,
             phone: phone,
+            role: "client",
             cart: { items: [] },
           });
 

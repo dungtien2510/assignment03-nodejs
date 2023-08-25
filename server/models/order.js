@@ -17,7 +17,7 @@ const orderSchema = new Schema({
   },
   status: { type: String, required: true },
   dateBook: { type: Date, required: true },
-
+  totalPrice: { type: Number, required: true },
   user: {
     email: {
       type: String,

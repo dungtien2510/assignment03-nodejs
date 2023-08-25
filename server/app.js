@@ -140,51 +140,62 @@ app.use("/auth", authRouter);
 
 const User = require("./models/user");
 // function protection: tạo hàm bảo vệ các router khi đăng nhập mới sử dụng được
-const protection = (req, res, next) => {
-  //Đầu tiên, middleware kiểm tra xem header "Authorization" có tồn tại hay không.
-  const token = req.headers.authorization
-    ? req.headers.authorization.split(" ")[1]
-    : undefined;
-  //Sau đó, middleware kiểm tra xem biến token hoặc biến req.session.isLoggedIn và token trong session có tồn tại hay không.
-  if (!token) {
-    //Nếu không tìm thấy token hoặc req.session.isLoggedIn là false (người dùng chưa đăng nhập), nó sẽ trả về mã trạng thái 401 và thông báo rằng người dùng phải đăng nhập để truy cập tài nguyên bảo vệ.
-    return res
-      .status(401)
-      .json({ message: "You must be logged in", status: 401 });
-  }
-
-  //Cuối cùng, middleware sử dụng thư viện JWT để giải mã mã thông báo JWT (token) bằng cách sử dụng khóa bí mật (secretJWT).
-  //Nếu mã thông báo JWT hợp lệ, nó sẽ được giải mã thành một JavaScript object (decodeToken), chứa các thông tin mà bạn đã định nghĩa trong mã thông báo.
-  //Nếu mã thông báo không hợp lệ, middleware sẽ trả về mã trạng thái 401 và thông báo rằng token không hợp lệ.
-  jwt.verify(token, secretJWT, (err, decodeToken) => {
-    if (err) {
-      return res.status(401).json({ message: "Token is invalid", status: 401 });
-    }
-
-    if (!decodeToken.user || !decodeToken.user._id) {
+const protection = (requestRole) => {
+  return (req, res, next) => {
+    //Đầu tiên, middleware kiểm tra xem header "Authorization" có tồn tại hay không.
+    const token = req.headers.authorization
+      ? req.headers.authorization.split(" ")[1]
+      : undefined;
+    //Sau đó, middleware kiểm tra xem biến token hoặc biến req.session.isLoggedIn và token trong session có tồn tại hay không.
+    if (!token) {
+      //Nếu không tìm thấy token hoặc req.session.isLoggedIn là false (người dùng chưa đăng nhập), nó sẽ trả về mã trạng thái 401 và thông báo rằng người dùng phải đăng nhập để truy cập tài nguyên bảo vệ.
       return res
         .status(401)
-        .json({ message: "Invalid user data in token", status: 401 });
+        .json({ message: "You must be logged in", status: 401 });
     }
 
-    const userId = decodeToken.user._id.toString();
+    //Cuối cùng, middleware sử dụng thư viện JWT để giải mã mã thông báo JWT (token) bằng cách sử dụng khóa bí mật (secretJWT).
+    //Nếu mã thông báo JWT hợp lệ, nó sẽ được giải mã thành một JavaScript object (decodeToken), chứa các thông tin mà bạn đã định nghĩa trong mã thông báo.
+    //Nếu mã thông báo không hợp lệ, middleware sẽ trả về mã trạng thái 401 và thông báo rằng token không hợp lệ.
+    jwt.verify(token, secretJWT, (err, decodeToken) => {
+      if (err) {
+        return res
+          .status(401)
+          .json({ message: "Token is invalid", status: 401 });
+      }
 
-    User.findById(userId)
-      .then((user) => {
-        if (!user) {
-          return res.status(404).json({ message: "User not found" });
-        }
+      if (!decodeToken.user || !decodeToken.user._id) {
+        return res
+          .status(401)
+          .json({ message: "Invalid user data in token", status: 401 });
+      }
+      if (
+        (decodeToken.user.role !== requestRole) &
+        (decodeToken.user.role !== "admin") &
+        (decodeToken.user.role === "client")
+      ) {
+        return res.status(403).json({ message: "Permission denied" });
+      }
 
-        req.user = user;
+      const userId = decodeToken.user._id.toString();
 
-        next();
-      })
-      .catch((err) => next(err));
-  });
+      User.findById(userId)
+        .then((user) => {
+          if (!user) {
+            return res.status(404).json({ message: "User not found" });
+          }
+
+          req.user = user;
+
+          next();
+        })
+        .catch((err) => next(err));
+    });
+  };
 };
 
 //router client
-app.use("/client", protection, clientRouter);
+app.use("/client", protection("client"), clientRouter);
 
 // router admin
 // app.use("/admin", protection, adminRouter);

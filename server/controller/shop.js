@@ -26,7 +26,7 @@ const transporter = nodemailer.createTransport(
       // nhưng thường nên lưu trữ nó trong biến môi trường (environment variable) để bảo mật hơn.
       // API key này sẽ được cung cấp bởi SendGrid khi bạn đăng ký và sử dụng dịch vụ của họ.
       api_key:
-        "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",
+        "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",
     },
   })
 );
@@ -89,7 +89,10 @@ exports.getCart = async (req, res, next) => {
       ).quantity;
       return { ...prod.toObject(), quantity: quantity };
     });
-    return res.status(200).json(result);
+    const totalPrice = result.reduce((acc, item) => {
+      return acc + item.price * item.quantity;
+    }, 0);
+    return res.status(200).json({ result, totalPrice });
   } catch {
     (err) => {
       const error = new Error(err);
@@ -179,6 +182,7 @@ exports.postOrder = async (req, res, next) => {
     const address = req.body.address;
     const phoneNumber = req.body.phoneNumber;
     const products = req.user.cart.items;
+    const totalPrice = req.body.totalPrice;
     const dateBook = new Date();
     const error = validationResult(req);
     if (!error.isEmpty()) {
@@ -193,6 +197,7 @@ exports.postOrder = async (req, res, next) => {
       products: products,
       status: "unconfimred",
       dateBook: dateBook,
+      totalPrice: totalPrice,
       user: {
         email: email,
         fullName: fullName,
