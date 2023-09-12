@@ -1,11 +1,20 @@
 const express = require("express");
-const router = express.Router();
 const { check, body } = require("express-validator");
 
 const adminController = require("../controller/admin");
 const User = require("../models/user");
-//router post signup
+const router = express.Router();
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////
+///////////////
+const upload = require("../app");
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////
+///////////////////////////
+
+//router post signup
 router.post(
   "/signup",
   [
@@ -53,25 +62,26 @@ router.post(
       return true;
     }),
   ],
-  authController.postSignup
+  adminController.postSignup
 );
 
 // router add product
-router.post(
-  "/product/add",
-  [
-    body("name").trim().notEmpty().withMessage("name is required"),
-    body("photos").trim().notEmpty().withMessage("photos is required"),
-    body("longDesc").trim().notEmpty().withMessage("description is required"),
-    body("price").trim().notEmpty().withMessage("price is required"),
-    body("shortDesc")
-      .trim()
-      .notEmpty()
-      .withMessage("short description is required"),
-    body("category").trim().notEmpty().withMessage("category is required"),
-  ],
-  adminController.postAddProduct
-);
+// router.post(
+//   "/product/add",
+//   // [
+//   //   body("name").trim().notEmpty().withMessage("name is required"),
+//   //   body("photos").trim().notEmpty().withMessage("photos is required"),
+//   //   body("longDesc").trim().notEmpty().withMessage("description is required"),
+//   //   body("price").trim().notEmpty().withMessage("price is required"),
+//   //   body("shortDesc")
+//   //     .trim()
+//   //     .notEmpty()
+//   //     .withMessage("short description is required"),
+//   //   body("category").trim().notEmpty().withMessage("category is required"),
+//   // ],
+//   upload.upload.array("photos", 5),
+//   adminController.postAddProduct
+// );
 
 //router edit product
 router.put(
@@ -87,6 +97,7 @@ router.put(
       .withMessage("short description is required"),
     body("category").trim().notEmpty().withMessage("category is required"),
   ],
+  // upload.array("photos", 5),
   adminController.putProduct
 );
 
@@ -96,4 +107,6 @@ router.delete("/product/delete/:id", adminController.deleteProduct);
 //router get order
 router.get("/order", adminController.getOrder);
 
-router.module.exports = router;
+//router add product
+router.get("/transactions", adminController.getDasboard);
+module.exports = router;

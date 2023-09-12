@@ -361,7 +361,7 @@ exports.getSearchProd = async (req, res, next) => {
       .exec();
     return res.status(200).json({
       message: "search successfully",
-      result: result,
+      products: result,
       totalProducts: totalProducts,
     });
   } catch (err) {

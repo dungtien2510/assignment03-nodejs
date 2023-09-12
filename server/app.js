@@ -31,6 +31,9 @@ const shopRouter = require("./router/shop");
 //router client
 const clientRouter = require("./router/client");
 
+//router admin
+const adminRouter = require("./router/admin");
+
 const MONGODB_URI =
   "mongodb+srv://dungtien2510:Dung25101997@cluster0.jyqoacf.mongodb.net/shop";
 
@@ -124,12 +127,21 @@ const MONGODB_URI =
 //   next();
 // });
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////
+///////////////
 app.use(cors());
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////
+///////////////
 //body-parser
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////
+///////////////
 //router shopRouter
 app.use("/shop", shopRouter);
 
@@ -139,6 +151,55 @@ app.use("/auth", authRouter);
 //router admin
 
 const User = require("./models/user");
+//thư viện multer để xử lý việc tải lên (upload) các tệp (file) từ client lên máy chủ.
+// Đây là một công cụ hữu ích khi bạn cần cho phép người dùng tải lên hình ảnh, tệp âm thanh, video hoặc bất kỳ loại tệp nào lên ứng dụng của bạn.
+const multer = require("multer");
+
+//cấu hình storage engine (bộ lưu trữ) cho Multer.
+// Mỗi khi Multer nhận được tệp từ yêu cầu tải lên, nó sẽ sử dụng bộ lưu trữ này để xác định nơi lưu trữ tệp và đặt tên cho tệp.
+const fileStorage = multer.diskStorage({
+  //destination: Đây là một hàm dùng để xác định thư mục mà bạn muốn lưu trữ tệp tải lên. Nó nhận vào ba tham số
+  destination: (req, file, cb) => {
+    //req: Đối tượng yêu cầu từ client.
+    //file: Thông tin về tệp đang được tải lên.
+    //cb: Một hàm callback được gọi sau khi bạn xác định thư mục đích.
+    //cb(null, 'image/') chỉ định rằng tất cả các tệp tải lên sẽ được lưu trong thư mục "image/" trên server.
+    // null là tham số đầu tiên thường là một đối tượng lỗi (error object).
+    console.log(file);
+    cb(null, "image/");
+  },
+
+  //filename: Đây là hàm được sử dụng để tạo tên cho tệp được lưu trữ. Nó cũng nhận vào ba tham số tương tự như destination
+  //req: Đối tượng yêu cầu từ client.
+  //file: Thông tin về tệp đang được tải lên.
+  //cb: Hàm callback để xác định tên tệp sau khi bạn xử lý.
+  filename: (req, file, cb) => {
+    //file.originalname là tên gốc của tệp được tải lên từ client.
+    //fieldname là tên của trường (field) mà tệp (file) được gửi lên từ client
+    console.log(file);
+    cb(null, file.originalname + "-" + Date.now());
+  },
+});
+
+//lọc các file không phải là file ảnh
+const fileFilter = (req, file, cb) => {
+  //Trong hàm fileFilter, chúng ta kiểm tra kiểu MIME của tệp (mimetype) để xác định xem tệp có phải là hình ảnh hay không.
+  if (file.mimetype.startsWith("image/")) {
+    cb(null, true);
+  } else {
+    cb(new Error("file không hợp lệ"), false);
+  }
+};
+
+//Trong đoạn mã trên, .single('image') được thêm vào sau cấu hình Multer để chỉ định rằng bạn muốn xử lý duy nhất một tệp được gửi lên thông qua trường có tên "image" trong biểu mẫu HTML.
+// Điều này có nghĩa là khi người dùng chọn một tệp để tải lên, chỉ tệp này sẽ được xử lý bởi Multer.
+//Nếu bạn muốn cho phép người dùng tải lên nhiều tệp thông qua cùng một trường hoặc các trường khác nhau, bạn có thể sử dụng .array() hoặc .fields() thay vì .single().
+//.array('images', 5) cho phép người dùng tải lên nhiều tệp thông qua trường có tên "images" trong biểu mẫu HTML. Tham số thứ hai 5 là số lượng tệp tối đa được phép tải lên cùng một lúc.
+const upload = multer({ storage: fileStorage });
+const adminController = require("./controller/admin");
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////
+///////////////
 // function protection: tạo hàm bảo vệ các router khi đăng nhập mới sử dụng được
 const protection = (requestRole) => {
   return (req, res, next) => {
@@ -194,12 +255,24 @@ const protection = (requestRole) => {
   };
 };
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////
+///////////////
 //router client
 app.use("/client", protection("client"), clientRouter);
 
 // router admin
-// app.use("/admin", protection, adminRouter);
+app.use("/admin", protection("admin"), adminRouter);
 
+app.post(
+  "/products/add",
+  protection("admin"),
+  upload.array("image", 5),
+  adminController.postAddProduct
+);
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////
+///////////////
 // middleware xữ lý lỗi
 app.use((req, res, next) => {
   res.status(404).json({ message: "API Not Found" });
@@ -210,6 +283,10 @@ app.use((err, req, res, next) => {
   console.log(err);
   res.status(500).json({ message: "sever error" });
 });
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////
+///////////////
 ////Tạo text index cho trường cần tìm kiếm (text index) là một cơ chế cải thiện hiệu suất cho việc tìm kiếm văn bản trong cơ sở dữ liệu.
 // Khi bạn thực hiện tìm kiếm văn bản trong một trường mà không có text index, MongoDB sẽ phải quét toàn bộ dữ liệu trong trường đó để tìm các giá trị khớp với từ khoá tìm kiếm.
 const createTextIndex = async () => {
@@ -228,6 +305,9 @@ const createTextIndex = async () => {
   }
 };
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////
+///////////////
 //
 mongoose
   .connect(MONGODB_URI)
