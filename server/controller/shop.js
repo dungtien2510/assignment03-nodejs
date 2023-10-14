@@ -1,7 +1,7 @@
 const Product = require("../models/product");
 const { check, body, validationResult } = require("express-validator");
 const Order = require("../models/order");
-
+const User = require("../models/user");
 const fs = require("fs");
 
 // thư viện mustache để thay thế một chuỗi trong tệp HTML bằng dữ liệu thực tế:
@@ -16,6 +16,8 @@ const PDFDocument = require("pdfkit");
 //nodemailer là một thư viện Node.js cho phép gửi email thông qua các giao thức  hay thậm chí là các dịch vụ email của bên thứ ba
 const nodemailer = require("nodemailer");
 const sendgridTransport = require("nodemailer-sendgrid-transport");
+const Chat = require("../models/chat");
+const { getIO } = require("../socket");
 
 const transporter = nodemailer.createTransport(
   //sendgridTransport: Đây là một plugin được sử dụng với nodemailer để tạo ra transporter cho dịch vụ SendGrid. Nó giúp chúng ta gửi email qua SendGrid API bằng cách cung cấp khóa API của SendGrid.
@@ -368,5 +370,148 @@ exports.getSearchProd = async (req, res, next) => {
     const error = new Error(err);
     error.httpStatusCode = 500;
     return next(error);
+  }
+};
+
+///chat
+exports.sendMessValid = [
+  body("message").trim().notEmpty().withMessage("not empty message"),
+];
+// start chat
+exports.postMessageChat = async (req, res, next) => {
+  const roomId = req.user.roomId;
+  const message = req.body.message;
+  const messageData = {
+    message: message,
+    time: new Date(),
+    from: "client",
+  };
+  try {
+    if (!roomId) {
+      return res.status(404).json({ message: "room chat not exist" });
+    }
+    const error = validationResult(req);
+    if (!error.isEmpty()) {
+      return res.status(422).json({
+        errorMessage: error.array()[0].msg,
+        validationErrors: error.array(),
+      });
+    }
+    const chat = await Chat.findById(roomId);
+    if (!chat) {
+      return res.status(422).json({ message: "chat not found" });
+    }
+    chat.messages.push(messageData);
+
+    await chat.save();
+    console.log(roomId.toString());
+
+    // getIO().on("connection", function (socket) {
+    //   console.log(socket.id, "connected");
+    //   socket.on("sendMess-" + roomId.toString(), (data) => {
+    //     socket.emit("sendMess-" + roomId.toString(), {
+    //       action: "post",
+    //       user: {
+    //         role: "client",
+    //         name: req.user.name,
+    //         message: messageData,
+    //         roomId: roomId,
+    //       },
+    //     });
+    //     socket.on("disconnect", function () {
+    //       console.log("disconnect");
+    //     });
+    //   });
+    // });
+    getIO().emit("sendMessage", {
+      action: "post",
+      user: {
+        role: "client",
+        name: req.user.name,
+        message: messageData,
+        roomId: roomId,
+      },
+    });
+    res.status(200).json({ message: "sent message" });
+  } catch (err) {
+    const error = new Error(err);
+    error.httpStatusCode = 500;
+    return next(error);
+  }
+};
+
+exports.getMessage = async (req, res, next) => {
+  const roomId = req.user.roomId;
+
+  try {
+    const chatRoom = await Chat.findById(roomId);
+    if (!chatRoom) {
+      const adviserArray = await User.aggregate([
+        { $match: { role: "adviser" } },
+        { $sample: { size: 1 } },
+      ]);
+      const adviser = adviserArray[0];
+
+      const chatNew = new Chat({
+        client: req.user.email,
+        ad: adviser.email,
+        messages: [
+          { from: "adviser", time: new Date(), message: "Hi, Can I Help you?" },
+        ],
+      });
+      const chatId = await chatNew.save();
+      console.log(chatId);
+      adviser.roomId.push(chatId._id);
+
+      await User.findByIdAndUpdate(adviser._id, adviser, { new: true });
+      req.user.addRoomId(chatId._id);
+      // getIO().on("connection", function (socket) {
+      //   console.log(socket.id, "connected");
+      //   socket.on("sendMess-" + chatId._id, (data) => {
+      //     socket.emit("sendMess-" + chatId._id, {
+      //       action: "post",
+      //       user: {
+      //         role: "client",
+      //         name: req.user.name,
+      //         message: "start sending message",
+      //         roomId: chatId._id,
+      //       },
+      //     });
+      //     socket.on("disconnect", function () {
+      //       console.log("disconnect");
+      //     });
+      //   });
+      // });
+      //
+      getIO().emit("sendMessage", {
+        action: "post",
+        user: {
+          role: "client",
+          name: req.user.name,
+          message: "send message",
+          roomId: chatId._id,
+        },
+      });
+      res.status(200).json({ result: chatId });
+    } else {
+      res.status(200).json({ result: chatRoom });
+    }
+  } catch (err) {
+    const error = new Error(err);
+    error.httpStatusCode = 500;
+    return next(error);
+  }
+};
+
+//
+exports.postEndChat = async (req, res, next) => {
+  try {
+    await Chat.findByIdAndDelete(req.user.roomId[0]);
+
+    res.status(200).json({ message: "delete Chat successfully" });
+  } catch (err) {
+    const error = new Error(err);
+    error.httpStatusCode = 500;
+    next(error);
   }
 };

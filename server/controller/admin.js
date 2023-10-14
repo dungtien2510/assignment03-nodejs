@@ -1,7 +1,9 @@
+const Chat = require("../models/chat");
 const Order = require("../models/order");
 const Product = require("../models/product");
 const User = require("../models/user");
 const { validationResult } = require("express-validator");
+const io = require("../socket");
 
 const nodemailer = require("nodemailer");
 const sendgridTransport = require("nodemailer-sendgrid-transport");
@@ -118,16 +120,33 @@ exports.postSignup = async (req, res, next) => {
 
 //post add product
 exports.postAddProduct = async (req, res, next) => {
-  console.log(req.files);
-  if (!req.files || req.files.length === 0) {
+  // Sử dụng express-validator để kiểm tra và xác thực dữ liệu người dùng
+  const errors = validationResult(req);
+
+  // Nếu có lỗi trong dữ liệu người dùng
+  if (!errors.isEmpty()) {
+    // In ra mảng các lỗi dưới dạng JSON trong bản ghi console của máy chủ
+    console.log(errors.array());
+
+    // Trả về một phản hồi JSON cho người dùng với mã trạng thái 422 (Unprocessable Entity) để báo lỗi
+    // Phản hồi JSON này bao gồm thông báo lỗi đầu tiên từ mảng errors, dữ liệu đã nhập (oldInput),
+    // và tất cả các lỗi trong mảng errors (validationErrors)
+    return res.status(422).json({
+      message: errors.array()[0].msg,
+
+      validationErrors: errors.array(),
+    });
+  }
+  console.log(req.file);
+  if (!req.file || req.file.length === 0) {
     return res.status(400).json({ message: "No files uploaded" });
   }
 
   // lấy danh sách tải lên
-  const uploadedFile = req.files;
+  const uploadedFile = req.file;
   console.log(uploadedFile);
   //
-  const filesPath = uploadedFile.map((file) => "/photos/" + file.filename);
+  const filesPath = "./photos/" + uploadedFile.filename;
 
   const productData = {
     name: req.body.name,
@@ -225,4 +244,112 @@ exports.getDasboard = async (req, res, next) => {
     error.httpStatusCode = 500;
     return next(error);
   }
+};
+
+/////////////// chat
+exports.postChat = async (req, res, next) => {
+  const message = req.body.message;
+  const roomId = req.body.roomId;
+  const dataMessage = {
+    message: message,
+    from: "admin",
+    time: new Date(),
+  };
+  try {
+    const chatData = await Chat.findById(roomId);
+
+    chatData.messages.push(dataMessage);
+    await chatData.save();
+    //.emit("message", { ... }): emit là phương thức của đối tượng kết nối Socket.
+    //io được sử dụng để gửi dữ liệu đến tất cả các client đang kết nối thông qua WebSocket.
+    // Trong trường hợp này, bạn đang gửi một sự kiện có tên "sendMess".
+    io.getIO().emit(
+      "sendMessage",
+      //"sendMess-" + roomId:
+      //Đây là tên của sự kiện mà bạn muốn gửi.
+      //Tên sự kiện được định nghĩa bằng cách kết hợp chuỗi "sendMess-" với giá trị của biến roomId.
+      //Điều này có nghĩa là tên của sự kiện sẽ được động đến dựa trên giá trị của roomId.
+      // Ví dụ, nếu roomId có giá trị là "room123", thì tên sự kiện sẽ là "sendMess-room123".
+      // Điều này giúp phân biệt các cuộc trò chuyện khác nhau trong ứng dụng của bạn.
+      {
+        //{...}:
+
+        //Đây là dữ liệu hoặc thông điệp bạn muốn gửi cùng với sự kiện. Trong trường hợp này, bạn gửi một đối tượng JSON với các thuộc tính sau:
+        //"action": Trường này xác định hành động được thực hiện trong sự kiện. Ở đây, hành động là "post", cho biết rằng bạn đang gửi một bài đăng (message).
+        //"user": Đây là một đối tượng mô tả người dùng liên quan đến thông điệp:
+        action: "post",
+
+        user: {
+          roomId: roomId,
+          name: req.user.name,
+          role: "admin",
+          message: dataMessage,
+        },
+      }
+    );
+    res.status(201).json({
+      message: "sent message",
+    });
+  } catch (err) {
+    const error = new Error(err);
+    error.httpStatusCode = 500;
+    return next(error);
+  }
+};
+
+exports.getChat = async (req, res, next) => {
+  try {
+    const chats = await Chat.find().select("_id client").exec();
+    const user = await User.find({ role: "client" }).select("_id email").exec();
+    res.status(200).json({ message: "success", result: { chats, user } });
+  } catch (err) {
+    const error = new Error(err);
+    error.httpStatusCode = 500;
+    return next(error);
+  }
+};
+
+exports.getChatId = async (req, res, next) => {
+  try {
+    const chatId = req.body.chatId;
+    const chatIdData = await Chat.findById(chatId);
+    res.status(200).json({ message: "success", result: chatIdData });
+  } catch (err) {
+    const error = new Error(err);
+    error.httpStatusCode = 500;
+    return next(error);
+  }
+};
+
+exports.postCreateChat = async (req, res, next) => {
+  const client = await User.findById(req.body.id);
+  const adviserArray = await User.aggregate([
+    { $match: { role: "adviser" } },
+    { $sample: { size: 1 } },
+  ]);
+  const adviser = adviserArray[0];
+
+  const chatNew = new Chat({
+    client: client.email,
+    ad: adviser.email,
+    messages: [],
+  });
+  const chatId = await chatNew.save();
+  console.log(chatId);
+  adviser.roomId.push(chatId._id);
+  client.roomId.push(chatId._id);
+
+  await User.findByIdAndUpdate(adviser._id, adviser, { new: true });
+  await User.findByIdAndUpdate(client._id, client, { new: true });
+
+  io.getIO().emit("sendMessage", {
+    action: "post",
+    user: {
+      role: "client",
+      name: req.user.name,
+      message: "send message",
+      roomId: chatId._id,
+    },
+  });
+  res.status(200).json({ result: chatId });
 };

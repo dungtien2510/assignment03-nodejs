@@ -8,7 +8,53 @@ const router = express.Router();
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////
 ///////////////
-const upload = require("../app");
+
+//thư viện multer để xử lý việc tải lên (upload) các tệp (file) từ client lên máy chủ.
+// Đây là một công cụ hữu ích khi bạn cần cho phép người dùng tải lên hình ảnh, tệp âm thanh, video hoặc bất kỳ loại tệp nào lên ứng dụng của bạn.
+const multer = require("multer");
+
+//cấu hình storage engine (bộ lưu trữ) cho Multer.
+// Mỗi khi Multer nhận được tệp từ yêu cầu tải lên, nó sẽ sử dụng bộ lưu trữ này để xác định nơi lưu trữ tệp và đặt tên cho tệp.
+const fileStorage = multer.diskStorage({
+  //destination: Đây là một hàm dùng để xác định thư mục mà bạn muốn lưu trữ tệp tải lên. Nó nhận vào ba tham số
+  destination: (req, file, cb) => {
+    //req: Đối tượng yêu cầu từ client.
+    //file: Thông tin về tệp đang được tải lên.
+    //cb: Một hàm callback được gọi sau khi bạn xác định thư mục đích.
+    //cb(null, 'image/') chỉ định rằng tất cả các tệp tải lên sẽ được lưu trong thư mục "image/" trên server.
+    // null là tham số đầu tiên thường là một đối tượng lỗi (error object).
+    cb(null, "photos/");
+  },
+
+  //filename: Đây là hàm được sử dụng để tạo tên cho tệp được lưu trữ. Nó cũng nhận vào ba tham số tương tự như destination
+  //req: Đối tượng yêu cầu từ client.
+  //file: Thông tin về tệp đang được tải lên.
+  //cb: Hàm callback để xác định tên tệp sau khi bạn xử lý.
+  filename: (req, file, cb) => {
+    //file.originalname là tên gốc của tệp được tải lên từ client.
+    //fieldname là tên của trường (field) mà tệp (file) được gửi lên từ client
+    cb(null, Date.now() + "-" + file.originalname);
+  },
+});
+
+//lọc các file không phải là file ảnh
+const fileFilter = (req, file, cb) => {
+  //Trong hàm fileFilter, chúng ta kiểm tra kiểu MIME của tệp (mimetype) để xác định xem tệp có phải là hình ảnh hay không.
+  console.log(file.mimetype);
+  if (file.mimetype.startsWith("image/")) {
+    cb(null, true);
+  } else {
+    cb(new Error("file không hợp lệ"), false);
+  }
+};
+
+//Trong đoạn mã trên, .single('image') được thêm vào sau cấu hình Multer để chỉ định rằng bạn muốn xử lý duy nhất một tệp được gửi lên thông qua trường có tên "image" trong biểu mẫu HTML.
+// Điều này có nghĩa là khi người dùng chọn một tệp để tải lên, chỉ tệp này sẽ được xử lý bởi Multer.
+//Nếu bạn muốn cho phép người dùng tải lên nhiều tệp thông qua cùng một trường hoặc các trường khác nhau, bạn có thể sử dụng .array() hoặc .fields() thay vì .single().
+//.array('images', 5) cho phép người dùng tải lên nhiều tệp thông qua trường có tên "images" trong biểu mẫu HTML. Tham số thứ hai 5 là số lượng tệp tối đa được phép tải lên cùng một lúc.
+const upload = multer({ storage: fileStorage, fileFilter: fileFilter });
+// const upload = multer({ debug: true });
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////
@@ -56,8 +102,8 @@ router.post(
       .matches(/^0\d+$/g)
       .withMessage("Phone number dose not match format"),
     body("role").custom((value, { req }) => {
-      if (value !== ("client" || "advisor")) {
-        throw new Error("Role must be Client or Advisor");
+      if (value !== ("client" || "adviser")) {
+        throw new Error("Role must be Client or Adviser");
       }
       return true;
     }),
@@ -66,22 +112,23 @@ router.post(
 );
 
 // router add product
-// router.post(
-//   "/product/add",
-//   // [
-//   //   body("name").trim().notEmpty().withMessage("name is required"),
-//   //   body("photos").trim().notEmpty().withMessage("photos is required"),
-//   //   body("longDesc").trim().notEmpty().withMessage("description is required"),
-//   //   body("price").trim().notEmpty().withMessage("price is required"),
-//   //   body("shortDesc")
-//   //     .trim()
-//   //     .notEmpty()
-//   //     .withMessage("short description is required"),
-//   //   body("category").trim().notEmpty().withMessage("category is required"),
-//   // ],
-//   upload.upload.array("photos", 5),
-//   adminController.postAddProduct
-// );
+router.post(
+  "/product/add",
+
+  // [
+  //   check("name").trim().notEmpty().withMessage("name is required"),
+  //   body("photos").trim().notEmpty().withMessage("photos is required"),
+  //   body("long_desc").trim().notEmpty().withMessage("description is required"),
+  //   body("price").trim().notEmpty().withMessage("price is required"),
+  //   body("short_desc")
+  //     .trim()
+  //     .notEmpty()
+  //     .withMessage("short description is required"),
+  //   body("category").trim().notEmpty().withMessage("category is required"),
+  // ],
+  upload.single("photos"),
+  adminController.postAddProduct
+);
 
 //router edit product
 router.put(
@@ -97,7 +144,7 @@ router.put(
       .withMessage("short description is required"),
     body("category").trim().notEmpty().withMessage("category is required"),
   ],
-  // upload.array("photos", 5),
+  upload.array("photos", 5),
   adminController.putProduct
 );
 
@@ -109,4 +156,16 @@ router.get("/order", adminController.getOrder);
 
 //router add product
 router.get("/transactions", adminController.getDasboard);
+
+///// router chat
+//router chat send message
+router.post("/sendMess", adminController.postChat);
+
+//router get chats
+router.get("/chatList", adminController.getChat);
+
+//router get chat Id
+router.get("/chat/:chatId", adminController.getChatId);
+
+router.post("/creatChat", adminController.postCreateChat);
 module.exports = router;

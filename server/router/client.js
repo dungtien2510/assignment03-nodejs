@@ -23,4 +23,15 @@ router.get("/orders", shopController.getOrdered);
 //router get order id
 router.get("/detail/:orderId", shopController.getOrderedId);
 
+/////chat
+router.post(
+  "/sendMess",
+  shopController.sendMessValid,
+  shopController.postMessageChat
+);
+
+router.get("/chat", shopController.getMessage);
+
+router.post("/endChat", shopController.postEndChat);
+
 module.exports = router;

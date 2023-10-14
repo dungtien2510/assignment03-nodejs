@@ -23,6 +23,7 @@ const userSchema = new Schema({
     required: true,
   },
   role: { type: String, required: true },
+  roomId: [{ type: Schema.Types.ObjectId }],
   cart: {
     items: [
       {
@@ -118,4 +119,12 @@ userSchema.methods.clearCart = function () {
   return this.save();
 };
 
+userSchema.methods.addRoomId = async function (roomId) {
+  try {
+    this.roomId = [roomId];
+    const result = await this.save();
+  } catch (err) {
+    throw new Error(err);
+  }
+};
 module.exports = mongoose.model("User", userSchema);
