@@ -167,4 +167,7 @@ router.get("/chatList", adminController.getChat);
 //router get chat Id
 router.get("/chat/:id", adminController.getChatId);
 
+//router end support
+router.get("/endChat/:id", adminController.getEndChat);
+
 module.exports = router;

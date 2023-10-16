@@ -257,7 +257,9 @@ exports.postChat = async (req, res, next) => {
   };
   try {
     const chatData = await Chat.findById(roomId);
-
+    if (!chatData) {
+      return res.status(404).json("not found id chat");
+    }
     chatData.messages.push(dataMessage);
     await chatData.save();
     //.emit("message", { ... }): emit là phương thức của đối tượng kết nối Socket.
@@ -287,7 +289,7 @@ exports.postChat = async (req, res, next) => {
         },
       }
     );
-    res.status(201).json({
+    res.status(200).json({
       message: "sent message",
     });
   } catch (err) {
@@ -366,5 +368,24 @@ exports.getChatId = async (req, res, next) => {
     const error = new Error(err);
     error.httpStatusCode = 500;
     return error;
+  }
+};
+
+exports.getEndChat = async (req, res, next) => {
+  const chatId = req.params.id;
+  console.log(chatId);
+  try {
+    await Chat.findByIdAndDelete(chatId);
+    io.getIO().emit("sendMessage", {
+      action: "delete",
+      user: {
+        roomId: chatId,
+      },
+    });
+    await res.status(200).json({ message: "chat deleted" });
+  } catch (err) {
+    const error = new Error(err);
+    error.httpStatusCode = 500;
+    return next(error);
   }
 };
