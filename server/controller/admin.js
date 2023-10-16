@@ -309,47 +309,62 @@ exports.getChat = async (req, res, next) => {
   }
 };
 
+// exports.getChatId = async (req, res, next) => {
+//   try {
+//     const chatId = req.body.chatId;
+//     const chatIdData = await Chat.findById(chatId);
+//     res.status(200).json({ message: "success", result: chatIdData });
+//   } catch (err) {
+//     const error = new Error(err);
+//     error.httpStatusCode = 500;
+//     return next(error);
+//   }
+// };
+
 exports.getChatId = async (req, res, next) => {
   try {
-    const chatId = req.body.chatId;
-    const chatIdData = await Chat.findById(chatId);
-    res.status(200).json({ message: "success", result: chatIdData });
+    const chatData = await Chat.findOne({ "client.id": req.params.id }).exec();
+    console.log(chatData);
+    if (chatData) {
+      return res.status(200).json({ message: "success", result: chatData });
+    } else {
+      const client = await User.findById(req.params.id);
+      if (!client) {
+        return res.status(404).json({ message: "not found client" });
+      }
+      const adviserArray = await User.aggregate([
+        { $match: { role: "adviser" } },
+        { $sample: { size: 1 } },
+      ]);
+      const adviser = adviserArray[0];
+      const chatNew = new Chat({
+        client: { email: client.email, id: client._id },
+        ad: { email: adviser.email, id: adviser._id },
+        messages: [],
+      });
+      const chatId = await chatNew.save();
+      console.log(chatId);
+      adviser.roomId.push(chatId._id);
+      client.roomId.push(chatId._id);
+
+      await User.findByIdAndUpdate(adviser._id, adviser, { new: true });
+
+      await User.findByIdAndUpdate(client._id, client, { new: true });
+
+      io.getIO().emit("sendMessage", {
+        action: "post",
+        user: {
+          role: "client",
+          name: req.user.name,
+          message: "send message",
+          roomId: chatId._id,
+        },
+      });
+      return res.status(200).json({ result: chatId });
+    }
   } catch (err) {
     const error = new Error(err);
     error.httpStatusCode = 500;
-    return next(error);
+    return error;
   }
-};
-
-exports.postCreateChat = async (req, res, next) => {
-  const client = await User.findById(req.body.id);
-  const adviserArray = await User.aggregate([
-    { $match: { role: "adviser" } },
-    { $sample: { size: 1 } },
-  ]);
-  const adviser = adviserArray[0];
-
-  const chatNew = new Chat({
-    client: client.email,
-    ad: adviser.email,
-    messages: [],
-  });
-  const chatId = await chatNew.save();
-  console.log(chatId);
-  adviser.roomId.push(chatId._id);
-  client.roomId.push(chatId._id);
-
-  await User.findByIdAndUpdate(adviser._id, adviser, { new: true });
-  await User.findByIdAndUpdate(client._id, client, { new: true });
-
-  io.getIO().emit("sendMessage", {
-    action: "post",
-    user: {
-      role: "client",
-      name: req.user.name,
-      message: "send message",
-      roomId: chatId._id,
-    },
-  });
-  res.status(200).json({ result: chatId });
 };

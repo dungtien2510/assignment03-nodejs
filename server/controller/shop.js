@@ -453,8 +453,8 @@ exports.getMessage = async (req, res, next) => {
       const adviser = adviserArray[0];
 
       const chatNew = new Chat({
-        client: req.user.email,
-        ad: adviser.email,
+        client: { email: req.user.email, id: req.user._id },
+        ad: { email: adviser.email, id: adviser._id },
         messages: [
           { from: "adviser", time: new Date(), message: "Hi, Can I Help you?" },
         ],

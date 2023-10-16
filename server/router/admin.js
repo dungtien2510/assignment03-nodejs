@@ -165,7 +165,6 @@ router.post("/sendMess", adminController.postChat);
 router.get("/chatList", adminController.getChat);
 
 //router get chat Id
-router.get("/chat/:chatId", adminController.getChatId);
+router.get("/chat/:id", adminController.getChatId);
 
-router.post("/creatChat", adminController.postCreateChat);
 module.exports = router;
