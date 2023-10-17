@@ -90,6 +90,7 @@ exports.postLogin = (req, res, next) => {
             fullName: user.fullName,
             phone: user.phone,
             email: user.email,
+            role: user.role,
           });
           // });
         }

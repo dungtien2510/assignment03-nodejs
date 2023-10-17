@@ -252,7 +252,7 @@ exports.postChat = async (req, res, next) => {
   const roomId = req.body.roomId;
   const dataMessage = {
     message: message,
-    from: "admin",
+    from: req.user.role,
     time: new Date(),
   };
   try {
@@ -284,7 +284,7 @@ exports.postChat = async (req, res, next) => {
         user: {
           roomId: roomId,
           name: req.user.name,
-          role: "admin",
+          role: req.user.role,
           message: dataMessage,
         },
       }
@@ -301,9 +301,26 @@ exports.postChat = async (req, res, next) => {
 
 exports.getChat = async (req, res, next) => {
   try {
-    const chats = await Chat.find().select("_id client").exec();
-    const user = await User.find({ role: "client" }).select("_id email").exec();
-    res.status(200).json({ message: "success", result: { chats, user } });
+    if (req.user.role === "admin") {
+      const chats = await Chat.find().select("_id client").exec();
+      const user = await User.find({ role: "client" })
+        .select("_id email")
+        .exec();
+      res.status(200).json({
+        message: "success",
+        result: { chats, user },
+        role: req.user.role,
+      });
+    }
+    if (req.user.role === "adviser") {
+      const chats = await Chat.find({ "ad.id": req.user._id })
+        .select("_id client")
+        .exec();
+      console.log(chats);
+      res
+        .status(200)
+        .json({ message: "success", result: { chats }, role: req.user.role });
+    }
   } catch (err) {
     const error = new Error(err);
     error.httpStatusCode = 500;
@@ -311,25 +328,14 @@ exports.getChat = async (req, res, next) => {
   }
 };
 
-// exports.getChatId = async (req, res, next) => {
-//   try {
-//     const chatId = req.body.chatId;
-//     const chatIdData = await Chat.findById(chatId);
-//     res.status(200).json({ message: "success", result: chatIdData });
-//   } catch (err) {
-//     const error = new Error(err);
-//     error.httpStatusCode = 500;
-//     return next(error);
-//   }
-// };
-
 exports.getChatId = async (req, res, next) => {
   try {
     const chatData = await Chat.findOne({ "client.id": req.params.id }).exec();
-    console.log(chatData);
+
+    // nếu có room chat thì trả về đoạn chat
     if (chatData) {
       return res.status(200).json({ message: "success", result: chatData });
-    } else {
+    } else if (!chatData & (req.user.role == "admin")) {
       const client = await User.findById(req.params.id);
       if (!client) {
         return res.status(404).json({ message: "not found client" });
@@ -363,11 +369,13 @@ exports.getChatId = async (req, res, next) => {
         },
       });
       return res.status(200).json({ result: chatId });
+    } else {
+      res.status(404).json("not found chat");
     }
   } catch (err) {
     const error = new Error(err);
     error.httpStatusCode = 500;
-    return error;
+    return next(error);
   }
 };
 

@@ -35,6 +35,9 @@ const clientRouter = require("./router/client");
 //router admin
 const adminRouter = require("./router/admin");
 
+//router adviser
+const adviserRouter = require("./router/adviser");
+
 const MONGODB_URI =
   "mongodb+srv://dungtien2510:Dung25101997@cluster0.jyqoacf.mongodb.net/shop";
 
@@ -193,7 +196,8 @@ const protection = (requestRole) => {
       if (
         (decodeToken.user.role !== requestRole) &
         (decodeToken.user.role !== "admin") &
-        (decodeToken.user.role === "client")
+        (decodeToken.user.role === "client" ||
+          (decodeToken.user.role === "adviser") & (requestRole === "admin"))
       ) {
         return res.status(403).json({ message: "Permission denied" });
       }
@@ -223,6 +227,9 @@ app.use("/client", protection("client"), clientRouter);
 
 // router admin
 app.use("/admin", protection("admin"), adminRouter);
+
+//router adviser
+app.use("/adviser", protection("adviser"), adviserRouter);
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////
