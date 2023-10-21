@@ -5,6 +5,8 @@ const http = require("http");
 //moongoose
 const mongoose = require("mongoose");
 
+const path = require("path");
+
 //jsonwebToken
 const jwt = require("jsonwebtoken");
 //secret jwt
@@ -146,6 +148,9 @@ app.use(cors());
 //body-parser
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+
+//
+app.use("/photos", express.static(path.join(__dirname, "photos")));
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////

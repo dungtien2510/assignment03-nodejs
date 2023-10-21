@@ -113,37 +113,38 @@ router.post(
 // router add product
 router.post(
   "/product/add",
+  upload.array("photos", 5),
+  [
+    check("name").not().isEmpty().withMessage("name is required"),
+    // body("photos").trim().notEmpty().withMessage("photos is required"),
+    body("long_desc").not().isEmpty().withMessage("description is required"),
+    body("price").not().isEmpty().withMessage("price is required"),
+    body("short_desc")
+      .not()
+      .isEmpty()
+      .withMessage("short description is required"),
+    body("category").not().isEmpty().withMessage("category is required"),
+  ],
 
-  // [
-  //   check("name").trim().notEmpty().withMessage("name is required"),
-  //   body("photos").trim().notEmpty().withMessage("photos is required"),
-  //   body("long_desc").trim().notEmpty().withMessage("description is required"),
-  //   body("price").trim().notEmpty().withMessage("price is required"),
-  //   body("short_desc")
-  //     .trim()
-  //     .notEmpty()
-  //     .withMessage("short description is required"),
-  //   body("category").trim().notEmpty().withMessage("category is required"),
-  // ],
-  upload.single("photos"),
   adminController.postAddProduct
 );
 
 //router edit product
 router.put(
   "/product/edit/:id",
-  [
-    body("name").trim().notEmpty().withMessage("name is required"),
-    body("photos").trim().notEmpty().withMessage("photos is required"),
-    body("longDesc").trim().notEmpty().withMessage("description is required"),
-    body("price").trim().notEmpty().withMessage("price is required"),
-    body("shortDesc")
-      .trim()
-      .notEmpty()
-      .withMessage("short description is required"),
-    body("category").trim().notEmpty().withMessage("category is required"),
-  ],
   upload.array("photos", 5),
+  [
+    check("name").not().isEmpty().withMessage("name is required"),
+    // body("photos").trim().notEmpty().withMessage("photos is required"),
+    body("long_desc").not().isEmpty().withMessage("description is required"),
+    body("price").not().isEmpty().withMessage("price is required"),
+    body("short_desc")
+      .not()
+      .isEmpty()
+      .withMessage("short description is required"),
+    body("category").not().isEmpty().withMessage("category is required"),
+  ],
+
   adminController.putProduct
 );
 

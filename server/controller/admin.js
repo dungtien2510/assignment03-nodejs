@@ -8,6 +8,8 @@ const io = require("../socket");
 const nodemailer = require("nodemailer");
 const sendgridTransport = require("nodemailer-sendgrid-transport");
 
+const http = "http://localhost:5000/";
+
 const transporter = nodemailer.createTransport(
   //sendgridTransport: Đây là một plugin được sử dụng với nodemailer để tạo ra transporter cho dịch vụ SendGrid. Nó giúp chúng ta gửi email qua SendGrid API bằng cách cung cấp khóa API của SendGrid.
   sendgridTransport({
@@ -120,6 +122,8 @@ exports.postSignup = async (req, res, next) => {
 
 //post add product
 exports.postAddProduct = async (req, res, next) => {
+  const name = req.body.name;
+  console.log(name);
   // Sử dụng express-validator để kiểm tra và xác thực dữ liệu người dùng
   const errors = validationResult(req);
 
@@ -137,16 +141,19 @@ exports.postAddProduct = async (req, res, next) => {
       validationErrors: errors.array(),
     });
   }
-  console.log(req.file);
-  if (!req.file || req.file.length === 0) {
+  console.log(req.files);
+  if (!req.files || req.files.length === 0) {
     return res.status(400).json({ message: "No files uploaded" });
   }
 
   // lấy danh sách tải lên
-  const uploadedFile = req.file;
+  const uploadedFile = req.files;
   console.log(uploadedFile);
   //
-  const filesPath = "./photos/" + uploadedFile.filename;
+  // const filesPath = "./photos/" + uploadedFile.filename;
+  const filesPath = uploadedFile.map((file) => http + file.path);
+
+  console.log(filesPath);
 
   const productData = {
     name: req.body.name,
@@ -170,10 +177,30 @@ exports.postAddProduct = async (req, res, next) => {
 
 // put edit product
 exports.putProduct = async (req, res, next) => {
-  const uploadFiles = req.file;
-  const filesPath = uploadFiles.map(
-    (file) => BASE_PATH + "/uploads/" + file.filename
-  );
+  const name = req.body.name;
+  console.log(name);
+  // Sử dụng express-validator để kiểm tra và xác thực dữ liệu người dùng
+  const errors = validationResult(req);
+
+  // Nếu có lỗi trong dữ liệu người dùng
+  if (!errors.isEmpty()) {
+    // In ra mảng các lỗi dưới dạng JSON trong bản ghi console của máy chủ
+    console.log(errors.array());
+
+    // Trả về một phản hồi JSON cho người dùng với mã trạng thái 422 (Unprocessable Entity) để báo lỗi
+    // Phản hồi JSON này bao gồm thông báo lỗi đầu tiên từ mảng errors, dữ liệu đã nhập (oldInput),
+    // và tất cả các lỗi trong mảng errors (validationErrors)
+    return res.status(422).json({
+      message: errors.array()[0].msg,
+
+      validationErrors: errors.array(),
+    });
+  }
+  const uploadedFiles = req.files;
+  if (!req.files || req.files.length === 0) {
+    return res.status(400).json({ message: "No files uploaded" });
+  }
+  const filesPath = uploadedFiles.map((file) => http + file.path);
   const productData = {
     name: req.body.name,
     category: req.body.category,
@@ -188,6 +215,7 @@ exports.putProduct = async (req, res, next) => {
       productData,
       { new: true } // Trả về người dùng sau khi đã được cập nhật;
     );
+    res.status(200).json({ message: "updated Product" });
   } catch (err) {
     const error = new Error(err);
     error.httpStatusCode = 500;
@@ -197,6 +225,7 @@ exports.putProduct = async (req, res, next) => {
 
 // delete product
 exports.deleteProduct = async (req, res, next) => {
+  console.log(req.params.id);
   try {
     await Product.findByIdAndDelete(req.params.id);
     return res.status(200).json({ message: "Product deleted successfully" });
