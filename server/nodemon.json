@@ -1,0 +1,9 @@
+{
+  "env": {
+    "MONGO_USER": "dungtien2510",
+    "MONGO_PASSWORD": "Dung25101997",
+    "MONGO_DEFAULT_DATABASE": "shop",
+    "SENDGRID_KEY": "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",
+    "JWT_KEY": "mysecretkey"
+  }
+}

@@ -18,8 +18,7 @@ const transporter = nodemailer.createTransport(
       //"SG.u7": Đây là API key của bạn. Trong đoạn mã mẫu này, API key được truyền vào trực tiếp trong mã,
       // nhưng thường nên lưu trữ nó trong biến môi trường (environment variable) để bảo mật hơn.
       // API key này sẽ được cung cấp bởi SendGrid khi bạn đăng ký và sử dụng dịch vụ của họ.
-      api_key:
-        "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",
+      api_key: process.env.SENDGRID_KEY,
     },
   })
 );

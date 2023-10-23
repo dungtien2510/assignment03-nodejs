@@ -7,10 +7,12 @@ const mongoose = require("mongoose");
 
 const path = require("path");
 
+const fs = require("fs");
+
 //jsonwebToken
 const jwt = require("jsonwebtoken");
 //secret jwt
-const secretJWT = "mysecretkey";
+const secretJWT = process.env.JWT_KEY;
 
 // express-session: Đây là mô-đun chịu trách nhiệm quản lý session trong ứng dụng Express.
 // Nó cung cấp middleware để tạo và quản lý dữ liệu session.
@@ -24,6 +26,15 @@ const csrf = require("csurf");
 
 //Thư viện connect-flash được sử dụng trong các ứng dụng web Node.js để hiển thị thông báo tạm thời (flash messages) cho người dùng
 // const flash = require("connect-flash");
+
+// helmet để thêm tiêu đề bảo mật
+const helmet = require("helmet");
+
+// compression để nét giá trị trả về
+const compression = require("compression");
+
+// morgan để ghi chú
+const morgan = require("morgan");
 
 //router auth
 const authRouter = require("./router/auth");
@@ -40,8 +51,7 @@ const adminRouter = require("./router/admin");
 //router adviser
 const adviserRouter = require("./router/adviser");
 
-const MONGODB_URI =
-  "mongodb+srv://dungtien2510:Dung25101997@cluster0.jyqoacf.mongodb.net/shop";
+const MONGODB_URI = `mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@cluster0.jyqoacf.mongodb.net/${process.env.MONGO_DEFAULT_DATABASE}`;
 
 //tạo máy chủ và xuất nó để sử dụng websocket
 const server = http.createServer(app);
@@ -148,6 +158,17 @@ app.use(cors());
 //body-parser
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+
+const accessLogStrema = fs.createWriteStream(
+  path.join(__dirname, "access.log"),
+  { flags: "a" }
+);
+//helmet
+// app.use(helmet());
+//compression
+app.use(compression());
+//morgan
+app.use(morgan("combined", { stream: accessLogStrema }));
 
 //
 app.use("/photos", express.static(path.join(__dirname, "photos")));

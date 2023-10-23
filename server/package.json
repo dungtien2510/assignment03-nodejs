@@ -5,7 +5,8 @@
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon --inspect app.js"
+    "start": "set MONGO_USER=dungtien2510&& set MONGO_PASSWORD=Dung25101997&& set MONGO_DEFAULT_DATABASE=shop&& set SENDGRID_KEY=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&& set JWT_KEY=mysecretkey&& node app.js",
+    "start:dev": "nodemon --inspect app.js"
   },
   "repository": {
     "type": "git",
@@ -15,6 +16,7 @@
   "license": "ISC",
   "dependencies": {
     "bcryptjs": "^2.4.3",
+    "compression": "^1.7.4",
     "connect-flash": "^0.1.1",
     "connect-mongodb-session": "^3.1.1",
     "cors": "^2.8.5",
@@ -25,11 +27,13 @@
     "express-session": "^1.17.3",
     "express-validator": "^7.0.1",
     "flash": "^1.1.0",
+    "helmet": "^7.0.0",
     "jsonwebtoken": "^9.0.1",
     "lodash": "^4.17.21",
     "minimist": "^1.2.8",
     "mongodb": "^5.7.0",
     "mongoose": "^7.4.0",
+    "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.1",
     "mustache": "^4.2.0",
     "nodemailer": "^6.9.4",
