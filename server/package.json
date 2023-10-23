@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "assignment03",
   "main": "app.js",
+  "engines": {
+    "node": "19.8.1"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "set MONGO_USER=dungtien2510&& set MONGO_PASSWORD=Dung25101997&& set MONGO_DEFAULT_DATABASE=shop&& set SENDGRID_KEY=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&& set JWT_KEY=mysecretkey&& node app.js",
